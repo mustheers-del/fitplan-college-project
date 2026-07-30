@@ -1,140 +1,350 @@
-# FitPlan - Serverless Gym & Meal Plan Generator
+# 🏋️ FitPlan – AI Gym & Meal Plan Generator
 
-## Project Overview
-FitPlan is a serverless application that generates personalized weekly gym and meal plans using AWS Lambda, DynamoDB, and Claude AI via Bedrock.
+FitPlan is an AI-powered serverless web application that generates personalized weekly workout and meal plans based on a user's fitness profile, goals, and daily activity logs.
 
-## Technology Stack
-
-### Backend
-- **Runtime**: Python 3.12
-- **Serverless**: AWS Lambda
-- **Database**: Amazon DynamoDB
-- **LLM**: Amazon Bedrock (Claude Haiku)
-- **Auth**: Amazon Cognito
-- **API**: AWS API Gateway
-- **IaC**: AWS SAM (Serverless Application Model)
-
-### Frontend
-- **Framework**: React 18 + TypeScript
-- **Build Tool**: Vite
-- **Styling**: Tailwind CSS
-- **State**: Zustand
-- **HTTP Client**: Axios
-
-## Project Structure
-
-fitplan-project/ ├── backend/ │ ├── functions/ # Lambda function handlers │ │ ├── onboard/ │ │ ├── get_plan/ │ │ ├── log_daily/ │ │ ├── get_logs/ │ │ └── weekly_plan_gen/ │ ├── common/ # Shared business logic │ ├── mcp_server/ # MCP layer (optional) │ ├── requirements.txt # Python dependencies │ ├── template.yaml # SAM infrastructure │ └── .gitignore │ ├── frontend/ │ ├── src/ │ │ ├── pages/ # React pages │ │ ├── components/ # React components │ │ ├── api/ # API client │ │ ├── store/ # Zustand store │ │ ├── types/ # TypeScript types │ │ └── App.tsx │ ├── public/ │ ├── package.json │ ├── tsconfig.json │ ├── vite.config.ts │ ├── .env.example │ └── .gitignore │ ├── docs/ # Documentation ├── README.md └── .gitignore
-
-
-## Getting Started
-
-### Prerequisites
-- Node.js v18+
-- Python 3.12
-- AWS Account
-- AWS CLI v2
-- AWS SAM CLI
-
-### Setup
-
-1. **Clone the repository**
-```bash
-git clone <repo-url>
-cd fitplan-project
-```
-
-2. **Setup Backend**
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-3. **Setup Frontend**
-```bash
-cd ../frontend
-npm install
-```
-
-4. **Configure Environment**
-Copy `.env.example` to `.env.local` and fill in your AWS details (after deployment)
-
-5. **Deploy**
-```bash
-cd backend
-sam build
-sam deploy --guided
-```
-
-## Development Workflow
-
-### Backend Development
-```bash
-cd backend
-source venv/bin/activate
-# Edit files, then run:
-sam build
-sam deploy
-```
-
-### Frontend Development
-```bash
-cd frontend
-npm run dev
-# Runs on http://localhost:5173
-```
-
-### Build for Production
-```bash
-cd frontend
-npm run build
-```
-
-## Features
-
-- ✅ User authentication with Cognito
-- ✅ Personalized weekly gym plans
-- ✅ AI-powered meal plans
-- ✅ Daily workout/meal logging
-- ✅ Progress tracking
-- ✅ Responsive React frontend
-- ✅ Serverless backend (AWS Lambda)
-
-## Cost Estimate
-- **Lambda**: Free tier covers 1M requests/month
-- **DynamoDB**: Free tier covers 25GB storage
-- **Cognito**: Free for up to 50k MAUs
-- **Bedrock**: ~$0.10-0.30 per week (plan generation)
-
-**Total monthly cost**: ~$5-15 (well within free tier for MVP)
-
-## Timeline
-
-- **Week 1**: Backend infrastructure & models
-- **Week 2**: Frontend auth & setup
-- **Week 3**: Plan generation & display
-- **Week 4**: Daily logging & deployment
-
-## Contributing
-
-Each team member works on their assigned component:
-1. Create feature branch
-2. Implement feature
-3. Push to branch
-4. Create Pull Request
-5. Code review & merge
-
-## Deployment
-
-Currently deployed on AWS:
-- Backend: Lambda @ `https://xxxxx.execute-api.us-east-1.amazonaws.com/dev`
-- Frontend: S3 + CloudFront @ `https://fitplan.example.com`
-
-## Support
-
-For issues or questions, create a GitHub issue or contact the team.
+The application uses Amazon Bedrock (Claude Haiku) to generate intelligent plans and AWS serverless services for scalability and cost efficiency.
 
 ---
 
-**Built with ❤️ by the FitPlan Team**
+# 🚀 Technology Stack
+
+## Frontend (`app/`)
+
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- Zustand
+- Axios
+
+## Backend (`backend/`)
+
+- Python 3.12
+- AWS Lambda
+- Amazon API Gateway
+- Amazon DynamoDB
+- Amazon Cognito
+- Amazon Bedrock (Claude Haiku)
+- AWS SAM (Serverless Application Model)
+
+---
+
+# 📁 Project Structure
+
+```
+gym-plan-v2/
+
+│
+├── app/                        # React + TypeScript frontend
+│   ├── public/
+│   ├── src/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── api/
+│   │   ├── store/
+│   │   ├── types/
+│   │   ├── hooks/
+│   │   ├── assets/
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   │
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── .env.example
+│   └── .gitignore
+│
+├── backend/                    # Python AWS Lambda backend
+│   ├── functions/
+│   │   ├── onboard/
+│   │   ├── get_plan/
+│   │   ├── log_daily/
+│   │   ├── get_logs/
+│   │   └── weekly_plan_gen/
+│   │
+│   ├── common/
+│   │
+│   ├── mcp_server/
+│   │
+│   ├── requirements.txt
+│   ├── template.yaml
+│   └── .gitignore
+│
+├── docs/
+│
+├── README.md
+│
+└── .gitignore
+```
+
+---
+
+# 📌 Project Architecture
+
+```
+User
+
+        │
+
+        ▼
+
+React Web Application (app)
+
+        │
+
+Amazon API Gateway
+
+        │
+
+AWS Lambda Functions
+
+        │
+
+Amazon DynamoDB
+
+        │
+
+Amazon Bedrock (Claude Haiku)
+
+        │
+
+Workout + Meal Plan
+
+        │
+
+Response back to User
+```
+
+---
+
+# ✨ Features
+
+- User Authentication (Amazon Cognito)
+- Personalized Gym Plans
+- Personalized Meal Plans
+- AI-powered Weekly Plan Generation
+- Daily Workout Logging
+- Daily Meal Logging
+- Weekly Progress Tracking
+- Responsive React Interface
+- Serverless AWS Backend
+
+---
+
+# 🛠 Prerequisites
+
+Before starting, install:
+
+- Git
+- Node.js (v18 or later)
+- Python 3.12
+- AWS CLI v2
+- AWS SAM CLI
+- Visual Studio Code
+- AWS Account
+
+---
+
+# ⚙️ Backend Setup
+
+```bash
+cd backend
+
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+---
+
+# ⚙️ Frontend Setup
+
+```bash
+cd app
+
+npm install
+```
+
+Run the frontend:
+
+```bash
+npm run dev
+```
+
+---
+
+# 🌍 Environment Variables
+
+Copy
+
+```
+.env.example
+```
+
+to
+
+```
+.env.local
+```
+
+and configure your AWS credentials after deployment.
+
+---
+
+# 🚀 Deploy Backend
+
+```bash
+cd backend
+
+sam build
+
+sam deploy --guided
+```
+
+---
+
+# 💻 Development Workflow
+
+## Backend
+
+```bash
+cd backend
+
+# Activate virtual environment
+
+sam build
+
+sam deploy
+```
+
+## Frontend
+
+```bash
+cd app
+
+npm run dev
+```
+
+The application will run on:
+
+```
+http://localhost:5173
+```
+
+---
+
+# 🌿 Git Workflow
+
+Every team member should follow this workflow.
+
+### 1. Pull latest changes
+
+```bash
+git pull origin main
+```
+
+### 2. Create a feature branch
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+Example:
+
+```bash
+git checkout -b feature/login-page
+```
+
+### 3. Develop your feature
+
+### 4. Commit changes
+
+```bash
+git add .
+
+git commit -m "Add login page"
+```
+
+### 5. Push branch
+
+```bash
+git push origin feature/login-page
+```
+
+### 6. Create Pull Request
+
+Request a code review before merging.
+
+---
+
+# 📅 Project Timeline
+
+## Week 1
+
+- Repository setup
+- Project structure
+- Backend setup
+- Frontend setup
+
+## Week 2
+
+- Authentication
+- User onboarding
+- Database integration
+
+## Week 3
+
+- AI Plan Generation
+- Dashboard
+- Weekly Plans
+
+## Week 4
+
+- Daily Logging
+- Testing
+- Deployment
+- Final Review
+
+---
+
+# 💰 Estimated AWS Cost
+
+| Service | Estimated Cost |
+|----------|----------------|
+| AWS Lambda | Free Tier |
+| DynamoDB | Free Tier |
+| Cognito | Free Tier |
+| API Gateway | Free Tier |
+| Bedrock | ~$5–15/month (depending on usage) |
+
+---
+
+# 👥 Team Workflow
+
+Each team member will work on an assigned module.
+
+- Frontend
+- Backend
+- AWS Infrastructure
+- AI Integration
+- Testing & Documentation
+
+All changes must go through Pull Requests before merging into `main`.
+
+---
+
+# 📄 License
+
+This project is developed as part of the FitPlan Internship Project.
+
+---
+
+# ❤️ Built By
+
+FitPlan Development Team
