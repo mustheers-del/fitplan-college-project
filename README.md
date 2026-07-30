@@ -35,7 +35,7 @@ The application uses Amazon Bedrock (Claude Haiku) to generate intelligent plans
 gym-plan-v2/
 
 │
-├── app/                        # React + TypeScript frontend
+├── frontend/                        # React + TypeScript frontend
 │   ├── public/
 │   ├── src/
 │   │   ├── pages/
