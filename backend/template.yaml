@@ -1,0 +1,256 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: FitPlan - serverless weekly gym & meal plan generator
+
+# =========================================================================
+# OWNER: [C]  -- this file has ONE owner. If you need a resource added,
+# ask [C] in the group chat. Do not edit it yourself, even though you can.
+# Two people editing template.yaml is the #1 source of merge pain here.
+# =========================================================================
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, prod]
+  CognitoUserPoolId:
+    Type: String
+    Description: From the Cognito pool [M] created (us-east-1_XXXXXXXXX)
+  CognitoAppClientId:
+    Type: String
+  BedrockModelId:
+    Type: String
+    Default: us.amazon.nova-lite-v1:0
+    Description: Use the us. inference profile, never the bare model ID
+
+Globals:
+  Function:
+    Runtime: python3.12
+    Architectures: [arm64]        # ~20% cheaper than x86 for the same work
+    Timeout: 15
+    MemorySize: 256
+    Layers: [!Ref CommonLayer]
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref MainTable
+        STAGE: !Ref Stage
+        BEDROCK_MODEL_ID: !Ref BedrockModelId
+        POWERTOOLS_SERVICE_NAME: fitplan
+        LOG_LEVEL: INFO
+
+Resources:
+  # -----------------------------------------------------------------------
+  # Shared business-logic layer. Every function gets it. This is the
+  # "common/" layer the architecture doc is built around.
+  # -----------------------------------------------------------------------
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Metadata:
+      BuildMethod: python3.12
+    Properties:
+      LayerName: !Sub fitplan-${Stage}-common
+      ContentUri: layer/
+      CompatibleRuntimes: [python3.12]
+      RetentionPolicy: Delete
+
+  # -----------------------------------------------------------------------
+  # Data - single table, on-demand. NEVER provisioned capacity.
+  # -----------------------------------------------------------------------
+  MainTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub fitplan-${Stage}-main
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProd, true, false]
+
+  # -----------------------------------------------------------------------
+  # API - HTTP API (not REST API): cheaper per request, native JWT authorizer
+  # -----------------------------------------------------------------------
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowOrigins: ["*"]          # [C] Sprint 7: lock to the CloudFront domain
+        AllowHeaders: [Content-Type, Authorization]
+        AllowMethods: [GET, POST, PATCH, DELETE, OPTIONS]
+      Auth:
+        Authorizers:
+          CognitoAuth:
+            IdentitySource: $request.header.Authorization
+            JwtConfiguration:
+              audience: [!Ref CognitoAppClientId]
+              issuer: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPoolId}
+        DefaultAuthorizer: CognitoAuth
+
+  # -----------------------------------------------------------------------
+  # Functions
+  # -----------------------------------------------------------------------
+  HealthFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-health
+      CodeUri: functions/health/
+      Handler: handler.lambda_handler
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /health
+            Method: GET
+            Auth:
+              Authorizer: NONE      # the one public endpoint
+
+  OnboardFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-onboard
+      CodeUri: functions/onboard/
+      Handler: handler.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+      Events:
+        Post:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /onboard, Method: POST}
+
+  GetPlanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-get-plan
+      CodeUri: functions/get_plan/
+      Handler: handler.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy: {TableName: !Ref MainTable}
+      Events:
+        GetPlan:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /plan, Method: GET}
+        ListPlans:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /plans, Method: GET}
+
+  # --- the AI one: bigger timeout and memory, and Bedrock permissions ---
+  GeneratePlanFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-generate-plan
+      CodeUri: functions/generate_plan/
+      Handler: handler.lambda_handler
+      Timeout: 60                  # cold Bedrock call + one retry
+      MemorySize: 512
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              # Scoped deliberately: this role CANNOT invoke expensive models.
+              Resource:
+                - !Sub arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
+                - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+      Events:
+        Post:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /plan/generate, Method: POST}
+
+  LogDailyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-log-daily
+      CodeUri: functions/log_daily/
+      Handler: handler.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+      Events:
+        Post:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /logs/daily, Method: POST}
+
+  GetLogsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-get-logs
+      CodeUri: functions/get_logs/
+      Handler: handler.lambda_handler
+      Policies:
+        - DynamoDBReadPolicy: {TableName: !Ref MainTable}
+      Events:
+        Get:
+          Type: HttpApi
+          Properties: {ApiId: !Ref HttpApi, Path: /logs/daily, Method: GET}
+
+  # --- scheduled, unattended: needs a DLQ ---
+  WeeklyPlanGenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-weekly-plan-gen
+      CodeUri: functions/weekly_plan_gen/
+      Handler: handler.lambda_handler
+      Timeout: 900                 # 15 min: it loops over users
+      MemorySize: 512
+      Environment:
+        Variables:
+          MAX_USERS_PER_RUN: "50"
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt WeeklyDLQ.Arn
+      Policies:
+        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+        - SQSSendMessagePolicy: {QueueName: !GetAtt WeeklyDLQ.QueueName}
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource:
+                - !Sub arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
+                - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+      Events:
+        WeeklySchedule:
+          Type: ScheduleV2
+          Properties:
+            # Mondays 02:00 UTC = 07:30 IST. Plan is ready before the user wakes.
+            ScheduleExpression: cron(0 2 ? * MON *)
+            Description: Regenerate weekly plans for all active users
+
+  WeeklyDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub fitplan-${Stage}-weekly-dlq
+      MessageRetentionPeriod: 1209600   # 14 days
+
+  # -----------------------------------------------------------------------
+  # Log retention. The default is "never expire", which quietly costs money.
+  # -----------------------------------------------------------------------
+  HealthLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-health
+      RetentionInDays: !If [IsProd, 30, 7]
+
+Conditions:
+  IsProd: !Equals [!Ref Stage, prod]
+
+Outputs:
+  ApiUrl:
+    Description: Base URL - put this in the frontend's VITE_API_URL
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+  TableName:
+    Value: !Ref MainTable
+  HealthCheck:
+    Description: Sprint 1 exit criteria - curl this
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/health

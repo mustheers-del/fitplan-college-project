@@ -1,0 +1,15 @@
+# Default: everything needs Mustheer's review.
+*                                      @mustheers-del
+
+# The AI layer. Nobody else edits these.
+/backend/common/bedrock.py             @mustheers-del
+/backend/common/prompts.py             @mustheers-del
+/backend/common/plans.py               @mustheers-del
+/backend/common/log_parser.py          @mustheers-del
+/backend/functions/generate_plan/      @mustheers-del
+/backend/functions/weekly_plan_gen/    @mustheers-del
+/backend/mcp_server/                   @mustheers-del
+
+# Single-owner files -- ask the owner in the group, don't edit directly.
+/backend/template.yaml                 @parshuram-gh
+/backend/common/models.py              @ankush-gh

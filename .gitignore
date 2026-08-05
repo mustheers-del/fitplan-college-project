@@ -1,0 +1,25 @@
+# Node
+node_modules/
+dist/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# AWS SAM
+.aws-sam/
+
+# Environment secrets
+.env
+.env.*
+
+# Data files
+*.csv
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
