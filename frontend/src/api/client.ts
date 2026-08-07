@@ -102,11 +102,59 @@ async function request<T>(
   return payload as T;
 }
 
-export const api = {
-  get: <T>(path: string, signal?: AbortSignal) => request<T>(path, { signal }),
+// ---------------------------------------------------------------------------
+// Generic HTTP methods
+// ---------------------------------------------------------------------------
+const http = {
+  get: <T>(path: string, signal?: AbortSignal) =>
+    request<T>(path, { signal }),
+
   post: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "POST", body }),
+
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: "PATCH", body }),
-  del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+
+  del: <T>(path: string) =>
+    request<T>(path, { method: "DELETE" }),
+};
+
+
+// ---------------------------------------------------------------------------
+// Named API endpoints
+// ---------------------------------------------------------------------------
+export const api = {
+  ...http,
+
+  // Plans
+  getPlan: <T = any>(week?: string) =>
+    http.get<{ plan: T }>(
+      `/plan${week ? `?week=${week}` : ""}`
+    ),
+
+  getPlans: <T = any>() =>
+    http.get<T>("/plans"),
+
+  generatePlan: <T = any>(force = false) =>
+    http.post<{ plan: T }>(
+      "/plan/generate",
+      { force }
+    ),
+
+  // Profile
+  onboard: <T = any>(profile: unknown) =>
+    http.post<T>("/onboard", profile),
+
+  getProfile: <T = any>() =>
+    http.get<T>("/profile"),
+
+  updateProfile: <T = any>(patch: unknown) =>
+    http.patch<T>("/profile", patch),
+
+  // Daily logs
+  logDaily: <T = any>(entry: unknown) =>
+    http.post<T>("/logs/daily", entry),
+
+  getLogs: <T = any>(range = "7d") =>
+    http.get<T>(`/logs?range=${range}`),
 };

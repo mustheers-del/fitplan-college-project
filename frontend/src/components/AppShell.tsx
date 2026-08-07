@@ -1,17 +1,25 @@
+import type { ReactNode } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 
-/**
- * Sidebar + top bar, matching the mockup. OWNER: [D], Sprint 1.
- */
 const NAV = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/workout", label: "Workout" },
   { to: "/meals", label: "Meal Plan" },
   { to: "/logs", label: "Daily Logs" },
   { to: "/progress", label: "Progress" },
+  { to: "/calendar", label: "Calendar" },
+  { to: "/achievements", label: "Achievements" },
+  { to: "/profile", label: "Profile" },
+  { to: "/settings", label: "Settings" },
 ];
 
-export default function AppShell() {
+interface AppShellProps {
+  children?: ReactNode;
+  active?: string;
+  userName?: string;
+}
+
+export function AppShell({ children }: AppShellProps) {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <aside
@@ -34,7 +42,13 @@ export default function AppShell() {
           FitPlan
         </div>
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: "var(--sp-1)" }}>
+        <nav
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "var(--sp-1)",
+          }}
+        >
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -43,7 +57,9 @@ export default function AppShell() {
                 padding: "var(--sp-3)",
                 borderRadius: "var(--r-md)",
                 fontSize: "var(--fs-sm)",
-                fontWeight: isActive ? "var(--fw-semibold)" : "var(--fw-medium)",
+                fontWeight: isActive
+                  ? "var(--fw-semibold)"
+                  : "var(--fw-medium)",
                 background: isActive ? "var(--c-primary)" : "transparent",
                 color: isActive ? "#fff" : "var(--c-text-secondary)",
               })}
@@ -62,10 +78,19 @@ export default function AppShell() {
             borderBottom: "1px solid var(--c-border)",
           }}
         />
-        <main style={{ flex: 1, padding: "var(--sp-8)", maxWidth: "var(--content-max)" }}>
-          <Outlet />
+
+        <main
+          style={{
+            flex: 1,
+            padding: "var(--sp-8)",
+            maxWidth: "var(--content-max)",
+          }}
+        >
+          {children ?? <Outlet />}
         </main>
       </div>
     </div>
   );
 }
+
+export default AppShell;
