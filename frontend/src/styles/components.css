@@ -1,0 +1,293 @@
+/* frontend/src/styles/components.css
+ *
+ * Styles for the shared components. Reads only from tokens.css —
+ * no raw hex codes or pixel values below this line.
+ */
+
+/* ---------- Card ---------- */
+.fp-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+}
+.fp-card--flush {
+  padding: 0;
+}
+.fp-card--raised {
+  box-shadow: var(--shadow-md);
+}
+
+.fp-card__title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  margin-bottom: var(--space-4);
+}
+
+/* ---------- Button ---------- */
+.fp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.fp-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.fp-btn--primary {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+.fp-btn--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+.fp-btn--primary:active:not(:disabled) {
+  background: var(--color-primary-active);
+}
+
+.fp-btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+.fp-btn--secondary:hover:not(:disabled) {
+  background: var(--color-grey-100);
+}
+
+.fp-btn--ghost {
+  background: transparent;
+  color: var(--color-primary);
+}
+.fp-btn--ghost:hover:not(:disabled) {
+  background: var(--color-primary-soft);
+}
+
+.fp-btn--danger {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+
+.fp-btn--sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-xs);
+}
+.fp-btn--lg {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-base);
+}
+.fp-btn--block {
+  width: 100%;
+}
+
+/* ---------- StatTile ---------- */
+.fp-stat {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+.fp-stat__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-2);
+}
+.fp-stat__value {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+.fp-stat__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-1);
+}
+.fp-stat__hint--up {
+  color: var(--color-success);
+}
+.fp-stat__hint--down {
+  color: var(--color-danger);
+}
+
+/* ---------- PageHeader ---------- */
+.fp-pageheader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.fp-pageheader__title {
+  font-size: var(--text-2xl);
+}
+.fp-pageheader__subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+
+/* ---------- EmptyState ---------- */
+.fp-empty {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  color: var(--color-text-muted);
+}
+.fp-empty__icon {
+  font-size: var(--text-3xl);
+  margin-bottom: var(--space-3);
+}
+.fp-empty__title {
+  font-size: var(--text-lg);
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+.fp-empty__message {
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-5);
+}
+
+/* ---------- LoadingSkeleton ---------- */
+.fp-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-grey-200) 25%,
+    var(--color-grey-100) 37%,
+    var(--color-grey-200) 63%
+  );
+  background-size: 400% 100%;
+  animation: fp-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+.fp-skeleton + .fp-skeleton {
+  margin-top: var(--space-3);
+}
+
+@keyframes fp-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fp-skeleton {
+    animation: none;
+  }
+}
+
+/* ---------- AppShell ---------- */
+.fp-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.fp-sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: var(--space-6) var(--space-4);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  z-index: var(--z-sidebar);
+}
+.fp-sidebar__brand {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-primary);
+  margin-bottom: var(--space-8);
+  padding-left: var(--space-3);
+}
+.fp-sidebar__link {
+  display: block;
+  padding: var(--space-3);
+  margin-bottom: var(--space-1);
+  border-radius: var(--radius-md);
+  color: var(--color-grey-600);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+.fp-sidebar__link:hover {
+  background: var(--color-grey-100);
+  color: var(--color-text);
+}
+.fp-sidebar__link--active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.fp-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.fp-topbar {
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-8);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+}
+.fp-topbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.fp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  display: grid;
+  place-items: center;
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-sm);
+}
+
+.fp-content {
+  padding: var(--space-8);
+  max-width: var(--content-max);
+  width: 100%;
+}
+
+/* Sprint 6 does the full responsive pass — this keeps it usable until then. */
+@media (max-width: 768px) {
+  .fp-sidebar {
+    display: none;
+  }
+  .fp-content {
+    padding: var(--space-4);
+  }
+  .fp-topbar {
+    padding: 0 var(--space-4);
+  }
+}
