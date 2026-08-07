@@ -11,5 +11,5 @@
 /backend/mcp_server/                   @mustheers-del
 
 # Single-owner files -- ask the owner in the group, don't edit directly.
-/backend/template.yaml                 @parshuram-gh
-/backend/common/models.py              @ankush-gh
+/backend/template.yaml                 @parshuramnagappa16-lang
+/backend/common/models.py              @ankushraut2323-design
