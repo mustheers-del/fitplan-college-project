@@ -1,70 +1,72 @@
-import { NavLink, Outlet } from "react-router-dom";
+// frontend/src/components/AppShell.tsx
+import type { ReactNode } from "react";
 
-/**
- * Sidebar + top bar, matching the mockup. OWNER: [D], Sprint 1.
- */
-const NAV = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/workout", label: "Workout" },
-  { to: "/meals", label: "Meal Plan" },
-  { to: "/logs", label: "Daily Logs" },
-  { to: "/progress", label: "Progress" },
+/** Sidebar navigation. Order matches the client mockup — don't reorder. */
+const NAV_ITEMS = [
+  { label: "Dashboard", href: "/dashboard" },
+  { label: "Workout", href: "/workout" },
+  { label: "Meal Plan", href: "/meals" },
+  { label: "Daily Logs", href: "/logs" },
+  { label: "Progress", href: "/progress" },
+  { label: "Calendar", href: "/calendar" },
+  { label: "Achievements", href: "/achievements" },
+  { label: "Profile", href: "/profile" },
+  { label: "Settings", href: "/settings" },
 ];
 
-export default function AppShell() {
-  return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <aside
-        style={{
-          width: "var(--sidebar-w)",
-          background: "var(--c-surface)",
-          borderRight: "1px solid var(--c-border)",
-          padding: "var(--sp-6) var(--sp-4)",
-        }}
-      >
-        <div
-          style={{
-            fontWeight: "var(--fw-bold)",
-            fontSize: "var(--fs-xl)",
-            color: "var(--c-primary)",
-            marginBottom: "var(--sp-8)",
-            paddingLeft: "var(--sp-3)",
-          }}
-        >
-          FitPlan
-        </div>
+interface AppShellProps {
+  children: ReactNode;
+  /** href of the current page, used to highlight the sidebar link. */
+  active?: string;
+  /** Shown in the top bar. Comes from Cognito once auth lands in Sprint 2. */
+  userName?: string;
+}
 
-        <nav style={{ display: "flex", flexDirection: "column", gap: "var(--sp-1)" }}>
-          {NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              style={({ isActive }) => ({
-                padding: "var(--sp-3)",
-                borderRadius: "var(--r-md)",
-                fontSize: "var(--fs-sm)",
-                fontWeight: isActive ? "var(--fw-semibold)" : "var(--fw-medium)",
-                background: isActive ? "var(--c-primary)" : "transparent",
-                color: isActive ? "#fff" : "var(--c-text-secondary)",
-              })}
+export function AppShell({ children, active, userName }: AppShellProps) {
+  const initials = userName
+    ? userName
+        .trim()
+        .split(/\s+/)
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "?";
+
+  return (
+    <div className="fp-shell">
+      <aside className="fp-sidebar">
+        <div className="fp-sidebar__brand">FitPlan</div>
+
+        <nav>
+          {NAV_ITEMS.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              className={
+                "fp-sidebar__link" +
+                (item.href === active ? " fp-sidebar__link--active" : "")
+              }
+              aria-current={item.href === active ? "page" : undefined}
             >
               {item.label}
-            </NavLink>
+            </a>
           ))}
         </nav>
       </aside>
 
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-        <header
-          style={{
-            height: "var(--topbar-h)",
-            background: "var(--c-surface)",
-            borderBottom: "1px solid var(--c-border)",
-          }}
-        />
-        <main style={{ flex: 1, padding: "var(--sp-8)", maxWidth: "var(--content-max)" }}>
-          <Outlet />
-        </main>
+      <div className="fp-main">
+        <header className="fp-topbar">
+          <div />
+          <div className="fp-topbar__user">
+            <span>{userName ?? "Not signed in"}</span>
+            <div className="fp-avatar" aria-hidden="true">
+              {initials}
+            </div>
+          </div>
+        </header>
+
+        <main className="fp-content">{children}</main>
       </div>
     </div>
   );
