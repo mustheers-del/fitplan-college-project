@@ -1,60 +1,23 @@
-/** The four tiles across the top of the mockup dashboard. OWNER: [D] */
-export default function StatTile({
-  label,
-  value,
-  unit,
-  delta,
-  deltaLabel = "vs yesterday",
-}: {
+// frontend/src/components/StatTile.tsx
+interface StatTileProps {
   label: string;
   value: string | number;
-  unit?: string;
-  delta?: number;
-  deltaLabel?: string;
-}) {
-  const up = (delta ?? 0) >= 0;
+  /** Small line under the value, e.g. "+2.4 kg this month". */
+  hint?: string;
+  /** Colours the hint green or red. Leave off for neutral grey. */
+  trend?: "up" | "down";
+}
+
+export function StatTile({ label, value, hint, trend }: StatTileProps) {
+  const hintClass = ["fp-stat__hint", trend ? `fp-stat__hint--${trend}` : ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <div
-      style={{
-        background: "var(--c-surface)",
-        border: "1px solid var(--c-border)",
-        borderRadius: "var(--r-lg)",
-        padding: "var(--sp-4)",
-        boxShadow: "var(--shadow-sm)",
-      }}
-    >
-      <div style={{ fontSize: "var(--fs-sm)", color: "var(--c-text-secondary)" }}>{label}</div>
-      <div
-        style={{
-          fontSize: "var(--fs-2xl)",
-          fontWeight: "var(--fw-bold)",
-          margin: "var(--sp-1) 0",
-        }}
-      >
-        {value}
-        {unit && (
-          <span
-            style={{
-              fontSize: "var(--fs-sm)",
-              fontWeight: "var(--fw-normal)",
-              color: "var(--c-text-muted)",
-            }}
-          >
-            {" "}
-            {unit}
-          </span>
-        )}
-      </div>
-      {delta !== undefined && (
-        <div
-          style={{
-            fontSize: "var(--fs-xs)",
-            color: up ? "var(--c-success)" : "var(--c-danger)",
-          }}
-        >
-          {up ? "↑" : "↓"} {Math.abs(delta)}% <span style={{ color: "var(--c-text-muted)" }}>{deltaLabel}</span>
-        </div>
-      )}
+    <div className="fp-stat">
+      <div className="fp-stat__label">{label}</div>
+      <div className="fp-stat__value">{value}</div>
+      {hint && <div className={hintClass}>{hint}</div>}
     </div>
   );
 }
