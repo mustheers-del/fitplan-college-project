@@ -9,11 +9,7 @@ Description: FitPlan - serverless weekly gym & meal plan generator
 # =========================================================================
 
 Parameters:
-  Stage:# =========================================================================
-# OWNER: Parshuram  -- this file has ONE owner. If you need a resource added,
-# ask Parshuram in the group chat. Do not edit it yourself, even though you can.
-# Two people editing template.yaml is the #1 source of merge pain here.
-# =========================================================================
+  Stage:
     Type: String
     Default: dev
     AllowedValues: [dev, prod]
