@@ -1,60 +1,58 @@
-/** The four tiles across the top of the mockup dashboard. OWNER: [D] */
-export default function StatTile({
-  label,
-  value,
-  unit,
-  delta,
-  deltaLabel = "vs yesterday",
-}: {
+interface StatTileProps {
   label: string;
   value: string | number;
   unit?: string;
+  hint?: string;
   delta?: number;
   deltaLabel?: string;
-}) {
-  const up = (delta ?? 0) >= 0;
+  trend?: "up" | "down";
+}
+
+export function StatTile({
+  label,
+  value,
+  unit,
+  hint,
+  delta,
+  deltaLabel,
+  trend,
+}: StatTileProps) {
+  const direction =
+    delta === undefined
+      ? trend
+      : delta > 0
+        ? "up"
+        : delta < 0
+          ? "down"
+          : undefined;
+
+  const hintClass = [
+    "fp-stat__hint",
+    direction ? `fp-stat__hint--${direction}` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const deltaText =
+    delta === undefined
+      ? null
+      : `${delta > 0 ? "▲" : delta < 0 ? "▼" : "—"} ${Math.abs(delta)}%` +
+        (deltaLabel ? ` ${deltaLabel}` : "");
+
+  const subline = deltaText ?? hint;
+
   return (
-    <div
-      style={{
-        background: "var(--c-surface)",
-        border: "1px solid var(--c-border)",
-        borderRadius: "var(--r-lg)",
-        padding: "var(--sp-4)",
-        boxShadow: "var(--shadow-sm)",
-      }}
-    >
-      <div style={{ fontSize: "var(--fs-sm)", color: "var(--c-text-secondary)" }}>{label}</div>
-      <div
-        style={{
-          fontSize: "var(--fs-2xl)",
-          fontWeight: "var(--fw-bold)",
-          margin: "var(--sp-1) 0",
-        }}
-      >
+    <div className="fp-stat">
+      <div className="fp-stat__label">{label}</div>
+
+      <div className="fp-stat__value">
         {value}
-        {unit && (
-          <span
-            style={{
-              fontSize: "var(--fs-sm)",
-              fontWeight: "var(--fw-normal)",
-              color: "var(--c-text-muted)",
-            }}
-          >
-            {" "}
-            {unit}
-          </span>
-        )}
+        {unit && <span className="fp-stat__unit"> {unit}</span>}
       </div>
-      {delta !== undefined && (
-        <div
-          style={{
-            fontSize: "var(--fs-xs)",
-            color: up ? "var(--c-success)" : "var(--c-danger)",
-          }}
-        >
-          {up ? "↑" : "↓"} {Math.abs(delta)}% <span style={{ color: "var(--c-text-muted)" }}>{deltaLabel}</span>
-        </div>
-      )}
+
+      {subline && <div className={hintClass}>{subline}</div>}
     </div>
   );
 }
+
+export default StatTile;

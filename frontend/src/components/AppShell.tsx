@@ -11,7 +11,7 @@ const NAV = [
   { to: "/progress", label: "Progress" },
 ];
 
-export default function AppShell() {
+export function AppShell() {
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <aside
@@ -69,3 +69,5 @@ export default function AppShell() {
     </div>
   );
 }
+
+export default AppShell;
