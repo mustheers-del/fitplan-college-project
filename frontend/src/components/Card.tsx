@@ -1,43 +1,39 @@
+// frontend/src/components/Card.tsx
 import type { ReactNode } from "react";
 
-/** OWNER: [D]. The base surface for every panel in the mockup. */
-export default function Card({
-  title,
-  action,
-  children,
-}: {
-  title?: string;
-  action?: ReactNode;
+interface CardProps {
   children: ReactNode;
-}) {
+  /** Optional heading rendered at the top of the card. */
+  title?: string;
+  /** Remove the internal padding — use when the card holds a full-width table or list. */
+  flush?: boolean;
+  /** Stronger shadow, for cards that should sit above the page. */
+  raised?: boolean;
+  className?: string;
+}
+
+export function Card({
+  children,
+  title,
+  flush,
+  raised,
+  className = "",
+}: CardProps) {
+  const classes = [
+    "fp-card",
+    flush ? "fp-card--flush" : "",
+    raised ? "fp-card--raised" : "",
+    className,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <section
-      style={{
-        background: "var(--c-surface)",
-        border: "1px solid var(--c-border)",
-        borderRadius: "var(--r-lg)",
-        padding: "var(--sp-5)",
-        boxShadow: "var(--shadow-sm)",
-      }}
-    >
-      {(title || action) && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "var(--sp-4)",
-          }}
-        >
-          {title && (
-            <h3 style={{ fontSize: "var(--fs-base)", fontWeight: "var(--fw-semibold)" }}>
-              {title}
-            </h3>
-          )}
-          {action}
-        </div>
-      )}
+    <div className={classes}>
+      {title && <h3 className="fp-card__title">{title}</h3>}
       {children}
-    </section>
+    </div>
   );
 }
+
+export default Card;

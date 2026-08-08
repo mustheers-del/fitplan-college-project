@@ -1,4 +1,4 @@
-// frontend/src/components/AppShell.tsx
+import { Outlet } from "react-router-dom";
 import type { ReactNode } from "react";
 
 /** Sidebar navigation. Order matches the client mockup — don't reorder. */
@@ -15,7 +15,7 @@ const NAV_ITEMS = [
 ];
 
 interface AppShellProps {
-  children: ReactNode;
+  children?: ReactNode;
   /** href of the current page, used to highlight the sidebar link. */
   active?: string;
   /** Shown in the top bar. Comes from Cognito once auth lands in Sprint 2. */
@@ -34,9 +34,26 @@ export function AppShell({ children, active, userName }: AppShellProps) {
     : "?";
 
   return (
-    <div className="fp-shell">
-      <aside className="fp-sidebar">
-        <div className="fp-sidebar__brand">FitPlan</div>
+    <div style={{ display: "flex", minHeight: "100vh" }}>
+      <aside
+        style={{
+          width: "var(--sidebar-w)",
+          background: "var(--c-surface)",
+          borderRight: "1px solid var(--c-border)",
+          padding: "var(--sp-6) var(--sp-4)",
+        }}
+      >
+        <div
+          style={{
+            fontWeight: "var(--fw-bold)",
+            fontSize: "var(--fs-xl)",
+            color: "var(--c-primary)",
+            marginBottom: "var(--sp-8)",
+            paddingLeft: "var(--sp-3)",
+          }}
+        >
+          FitPlan
+        </div>
 
         <nav>
           {NAV_ITEMS.map((item) => (
@@ -66,8 +83,10 @@ export function AppShell({ children, active, userName }: AppShellProps) {
           </div>
         </header>
 
-        <main className="fp-content">{children}</main>
+        <main className="fp-content">{children ?? <Outlet />}</main>
       </div>
     </div>
   );
 }
+
+export default AppShell;
