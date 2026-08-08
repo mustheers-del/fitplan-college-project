@@ -1,160 +1,104 @@
-// frontend/src/api/client.ts
-//
-// The ONLY place in the frontend that calls fetch().
-//
-// Nobody writes fetch() inside a page component. Everything goes through here,
-// so authentication headers, error handling and the base URL live in one file.
-//
-// OWNER: Mustheer.
-
-const BASE_URL: string = import.meta.env.VITE_API_URL ?? "";
-
-if (!BASE_URL && import.meta.env.DEV) {
-  console.warn(
-    "[api] VITE_API_URL is not set. Create frontend/.env.local containing:\n" +
-      "      VITE_API_URL=https://<api-id>.execute-api.us-east-1.amazonaws.com\n" +
-      "      (Parshuram posts this URL in the group after his first deploy.)",
-  );
-}
-
 /**
- * The Cognito JWT, held in memory only.
+ * Typed API client. OWNER: [E]
  *
- * Deliberately NOT in localStorage — a token in localStorage is readable by any
- * script on the page, which is the standard XSS token-theft route. Sprint 2
- * replaces this with a proper auth provider that refreshes it.
+ * RULE: no component calls fetch() directly. Everything goes through here.
+ * That's how auth headers, error shapes and the base URL stay in one place.
+ * A raw fetch() in a component is a BLOCKING review comment.
  */
-let authToken: string | null = null;
 
-export function setAuthToken(token: string | null): void {
-  authToken = token;
-}
+import { fetchAuthSession } from "aws-amplify/auth";
+import type { ApiError, DailyLog, UserProfile, WeeklyPlan } from "@/types/api";
 
-/** Thrown by every failed request. Pages catch this and show err.message. */
-export class ApiError extends Error {
+const BASE_URL = import.meta.env.VITE_API_URL as string;
+
+export class ApiRequestError extends Error {
   constructor(
     public status: number,
-    message: string,
-    public detail?: unknown,
+    public payload: ApiError,
   ) {
-    super(message);
-    this.name = "ApiError";
+    super(payload.error ?? `Request failed with ${status}`);
+    this.name = "ApiRequestError";
   }
 }
 
-interface RequestOptions {
-  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
-  body?: unknown;
-  signal?: AbortSignal;
-}
-
-async function request<T>(
-  path: string,
-  options: RequestOptions = {},
-): Promise<T> {
-  const { method = "GET", body, signal } = options;
-
-  const headers: Record<string, string> = { Accept: "application/json" };
-  if (body !== undefined) headers["Content-Type"] = "application/json";
-  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
-
-  let response: Response;
+async function authHeader(): Promise<Record<string, string>> {
   try {
-    response = await fetch(`${BASE_URL}${path}`, {
-      method,
-      headers,
-      signal,
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-  } catch (err) {
-    // Network-level failure: offline, DNS, CORS, server unreachable.
-    if ((err as Error).name === "AbortError") throw err;
-    throw new ApiError(0, "Could not reach the server. Check your connection.");
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  } catch {
+    return {};
   }
-
-  // 204 No Content — nothing to parse.
-  if (response.status === 204) return undefined as T;
-
-  const text = await response.text();
-  let payload: unknown = undefined;
-  if (text) {
-    try {
-      payload = JSON.parse(text);
-    } catch {
-      payload = text;
-    }
-  }
-
-  if (!response.ok) {
-    // Our backend returns { "detail": "readable message" } on a 400.
-    const detail =
-      typeof payload === "object" && payload !== null && "detail" in payload
-        ? String((payload as { detail: unknown }).detail)
-        : undefined;
-
-    throw new ApiError(
-      response.status,
-      detail ?? `Request failed (${response.status})`,
-      payload,
-    );
-  }
-
-  return payload as T;
 }
 
-// ---------------------------------------------------------------------------
-// Generic HTTP methods
-// ---------------------------------------------------------------------------
-const http = {
-  get: <T>(path: string, signal?: AbortSignal) =>
-    request<T>(path, { signal }),
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${BASE_URL}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeader()),
+      ...(init.headers ?? {}),
+    },
+  });
 
-  post: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body }),
+  if (!res.ok) {
+    let payload: ApiError = { error: res.statusText };
+    try {
+      payload = await res.json();
+    } catch {
+      /* non-JSON error body — keep the statusText fallback */
+    }
+    throw new ApiRequestError(res.status, payload);
+  }
 
-  patch: <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "PATCH", body }),
+  return res.status === 204 ? (undefined as T) : ((await res.json()) as T);
+}
 
-  del: <T>(path: string) =>
-    request<T>(path, { method: "DELETE" }),
-};
+// ---------------------------------------------------------------- endpoints
 
-
-// ---------------------------------------------------------------------------
-// Named API endpoints
-// ---------------------------------------------------------------------------
 export const api = {
-  ...http,
+  health: () => request<{ status: string; stage: string }>("/health"),
 
-  // Plans
-  getPlan: <T = any>(week?: string) =>
-    http.get<{ plan: T }>(
-      `/plan${week ? `?week=${week}` : ""}`
-    ),
+  // --- profile / onboarding  ([B] backend) ---
+  onboard: (profile: Partial<UserProfile>) =>
+    request<{ profile: UserProfile }>("/onboard", {
+      method: "POST",
+      body: JSON.stringify(profile),
+    }),
 
-  getPlans: <T = any>() =>
-    http.get<T>("/plans"),
+  getProfile: () => request<{ profile: UserProfile }>("/profile"),
 
-  generatePlan: <T = any>(force = false) =>
-    http.post<{ plan: T }>(
-      "/plan/generate",
-      { force }
-    ),
+  updateProfile: (patch: Partial<UserProfile>) =>
+    request<{ profile: UserProfile }>("/profile", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    }),
 
-  // Profile
-  onboard: <T = any>(profile: unknown) =>
-    http.post<T>("/onboard", profile),
+  // --- plans  ([B] read, [M] generate) ---
+  getPlan: (week?: string) =>
+    request<{ plan: WeeklyPlan }>(`/plan${week ? `?week=${week}` : ""}`),
 
-  getProfile: <T = any>() =>
-    http.get<T>("/profile"),
+  listPlanWeeks: () => request<{ weeks: string[] }>("/plans"),
 
-  updateProfile: <T = any>(patch: unknown) =>
-    http.patch<T>("/profile", patch),
+  /** Takes ~10s. Always show the generating screen; never a bare spinner. */
+  generatePlan: (opts: { force?: boolean; week?: string } = {}) =>
+    request<{ plan: WeeklyPlan }>("/plan/generate", {
+      method: "POST",
+      body: JSON.stringify(opts),
+    }),
 
-  // Daily logs
-  logDaily: <T = any>(entry: unknown) =>
-    http.post<T>("/logs/daily", entry),
+  // --- daily logs  ([C] backend) ---
+  logDaily: (entry: {
+    date: string;
+    workoutText?: string;
+    mealsText?: string;
+    tags?: string[];
+  }) =>
+    request<{ log: DailyLog }>("/logs/daily", {
+      method: "POST",
+      body: JSON.stringify(entry),
+    }),
 
-  getLogs: <T = any>(range = "7d") =>
-    http.get<T>(`/logs?range=${range}`),
+  getLogs: (range = "7d") =>
+    request<{ logs: DailyLog[]; range: string }>(`/logs/daily?range=${range}`),
 };
