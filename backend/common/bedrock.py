@@ -157,7 +157,10 @@ def invoke_structured(
     try:
         return model_cls.model_validate(extract_json(first.text)), first, "llm"
     except (ValidationError, ValueError, json.JSONDecodeError) as exc:
-        log.warning("first attempt failed validation: %s", exc)
+        # Bind to an outer name: Python deletes `exc` when the except
+        # block ends, and the retry prompt below needs the error text.
+        first_error = exc
+        log.warning("first attempt failed validation: %s", first_error)
 
     # --- the one and only retry ---
     retry_messages = [
@@ -166,7 +169,7 @@ def invoke_structured(
         {
             "role": "user",
             "content": (
-                f"That response failed schema validation with this error:\n\n{exc}\n\n"
+                f"That response failed schema validation with this error:\n\n{first_error}\n\n"
                 "Return the corrected JSON object only. No explanation, no markdown."
             ),
         },
