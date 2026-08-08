@@ -14,7 +14,7 @@ here is what stops the model programming 900 reps.
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -54,7 +54,7 @@ class UserProfile(BaseModel):
     allergies: list[str] = Field(default_factory=list)
     meals_per_day: int = Field(default=3, ge=2, le=6, alias="mealsPerDay")
     cooking_time: int = Field(default=30, ge=5, le=180, alias="cookingTime")
-    calorie_target: Optional[int] = Field(default=None, ge=1000, le=6000, alias="calorieTarget")
+    calorie_target: int | None = Field(default=None, ge=1000, le=6000, alias="calorieTarget")
     supplements: list[str] = Field(default_factory=list)
     budget_tier: Literal["low", "medium", "high"] = Field(default="medium", alias="budgetTier")
 
@@ -76,8 +76,8 @@ class WorkoutExercise(BaseModel):
     sets: int = Field(ge=1, le=10)
     reps: str = Field(description="e.g. '8-12' or '30 sec' for timed holds")
     rest_seconds: int = Field(default=60, ge=15, le=300, alias="restSeconds")
-    notes: Optional[str] = Field(default=None, max_length=200)
-    target_muscle: Optional[str] = Field(default=None, alias="targetMuscle")
+    notes: str | None = Field(default=None, max_length=200)
+    target_muscle: str | None = Field(default=None, alias="targetMuscle")
 
     model_config = {"populate_by_name": True}
 
@@ -128,13 +128,13 @@ class WeeklyPlan(BaseModel):
     week_start_date: date = Field(alias="weekStartDate")
     workout_plan: list[WorkoutDay] = Field(alias="workoutPlan")
     meal_plan: list[MealDay] = Field(alias="mealPlan")
-    coach_note: Optional[str] = Field(default=None, max_length=500, alias="coachNote")
+    coach_note: str | None = Field(default=None, max_length=500, alias="coachNote")
 
     # metadata — set by the backend, never by the model
-    generated_at: Optional[datetime] = Field(default=None, alias="generatedAt")
-    model_used: Optional[str] = Field(default=None, alias="modelUsed")
-    prompt_tokens: Optional[int] = Field(default=None, alias="promptTokens")
-    completion_tokens: Optional[int] = Field(default=None, alias="completionTokens")
+    generated_at: datetime | None = Field(default=None, alias="generatedAt")
+    model_used: str | None = Field(default=None, alias="modelUsed")
+    prompt_tokens: int | None = Field(default=None, alias="promptTokens")
+    completion_tokens: int | None = Field(default=None, alias="completionTokens")
     generation_source: Literal["llm", "llm_retry", "fallback"] = Field(
         default="llm", alias="generationSource"
     )
@@ -173,8 +173,8 @@ class DailyLog(DailyLogIn):
 
     created_at: datetime = Field(alias="createdAt")
     parsed: bool = False
-    parsed_workout: Optional[dict] = Field(default=None, alias="parsedWorkout")
-    parsed_meals: Optional[dict] = Field(default=None, alias="parsedMeals")
+    parsed_workout: dict | None = Field(default=None, alias="parsedWorkout")
+    parsed_meals: dict | None = Field(default=None, alias="parsedMeals")
 
     model_config = {"populate_by_name": True}
 

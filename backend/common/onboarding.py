@@ -7,8 +7,7 @@ activity multiplier + goal adjustment) so the LLM gets a number instead of null.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from common import dynamo
 from common.models import UserProfile
@@ -47,7 +46,7 @@ def create_or_update_profile(user_id: str, profile: UserProfile) -> UserProfile:
 
     data = profile.model_dump(by_alias=True, mode="json")
     existing = dynamo.get_item(user_id, dynamo.SK_PROFILE)
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
 
     data["createdAt"] = existing.get("createdAt", now) if existing else now
     data["updatedAt"] = now
@@ -56,6 +55,6 @@ def create_or_update_profile(user_id: str, profile: UserProfile) -> UserProfile:
     return profile
 
 
-def get_profile(user_id: str) -> Optional[UserProfile]:
+def get_profile(user_id: str) -> UserProfile | None:
     item = dynamo.get_item(user_id, dynamo.SK_PROFILE)
     return UserProfile.model_validate(item) if item else None

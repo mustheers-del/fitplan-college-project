@@ -57,7 +57,7 @@ def _regenerate_for_user(user_id: str, this_week: str, last_week: str) -> None:
     )
 
     if adherence and week_logs:
-        logs.mark_logs_parsed(user_id, [l["date"] for l in week_logs])
+        logs.mark_logs_parsed(user_id, [log["date"] for log in week_logs])
 
 
 def _list_active_users() -> list[str]:
