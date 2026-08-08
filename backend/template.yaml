@@ -3,15 +3,17 @@ Transform: AWS::Serverless-2016-10-31
 Description: FitPlan - serverless weekly gym & meal plan generator
 
 # =========================================================================
-# ask Parshuram in the group chat. Do not edit it yourself, even though you can.
-# OWNER: [C]  -- this file has ONE owner. If you need a resource added,
-# ask [C] in the group chat. Do not edit it yourself, even though you can.
+# OWNER: Parshuram  -- this file has ONE owner. If you need a resource added,
 # ask Parshuram in the group chat. Do not edit it yourself, even though you can.
 # Two people editing template.yaml is the #1 source of merge pain here.
 # =========================================================================
 
 Parameters:
-  Stage:
+  Stage:# =========================================================================
+# OWNER: Parshuram  -- this file has ONE owner. If you need a resource added,
+# ask Parshuram in the group chat. Do not edit it yourself, even though you can.
+# Two people editing template.yaml is the #1 source of merge pain here.
+# =========================================================================
     Type: String
     Default: dev
     AllowedValues: [dev, prod]
