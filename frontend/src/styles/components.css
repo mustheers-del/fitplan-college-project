@@ -119,7 +119,11 @@
 .fp-stat__hint--down {
   color: var(--color-danger);
 }
-
+.fp-stat__unit {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-normal);
+  color: var(--color-text-muted);
+}
 /* ---------- PageHeader ---------- */
 .fp-pageheader {
   display: flex;

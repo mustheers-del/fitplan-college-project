@@ -1,23 +1,58 @@
-// frontend/src/components/StatTile.tsx
 interface StatTileProps {
   label: string;
   value: string | number;
-  /** Small line under the value, e.g. "+2.4 kg this month". */
+  unit?: string;
   hint?: string;
-  /** Colours the hint green or red. Leave off for neutral grey. */
+  delta?: number;
+  deltaLabel?: string;
   trend?: "up" | "down";
 }
 
-export function StatTile({ label, value, hint, trend }: StatTileProps) {
-  const hintClass = ["fp-stat__hint", trend ? `fp-stat__hint--${trend}` : ""]
+export function StatTile({
+  label,
+  value,
+  unit,
+  hint,
+  delta,
+  deltaLabel,
+  trend,
+}: StatTileProps) {
+  const direction =
+    delta === undefined
+      ? trend
+      : delta > 0
+        ? "up"
+        : delta < 0
+          ? "down"
+          : undefined;
+
+  const hintClass = [
+    "fp-stat__hint",
+    direction ? `fp-stat__hint--${direction}` : "",
+  ]
     .filter(Boolean)
     .join(" ");
+
+  const deltaText =
+    delta === undefined
+      ? null
+      : `${delta > 0 ? "▲" : delta < 0 ? "▼" : "—"} ${Math.abs(delta)}%` +
+        (deltaLabel ? ` ${deltaLabel}` : "");
+
+  const subline = deltaText ?? hint;
 
   return (
     <div className="fp-stat">
       <div className="fp-stat__label">{label}</div>
-      <div className="fp-stat__value">{value}</div>
-      {hint && <div className={hintClass}>{hint}</div>}
+
+      <div className="fp-stat__value">
+        {value}
+        {unit && <span className="fp-stat__unit"> {unit}</span>}
+      </div>
+
+      {subline && <div className={hintClass}>{subline}</div>}
     </div>
   );
 }
+
+export default StatTile;
