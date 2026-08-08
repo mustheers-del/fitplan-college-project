@@ -3,8 +3,10 @@ Transform: AWS::Serverless-2016-10-31
 Description: FitPlan - serverless weekly gym & meal plan generator
 
 # =========================================================================
+# ask Parshuram in the group chat. Do not edit it yourself, even though you can.
 # OWNER: [C]  -- this file has ONE owner. If you need a resource added,
 # ask [C] in the group chat. Do not edit it yourself, even though you can.
+# ask Parshuram in the group chat. Do not edit it yourself, even though you can.
 # Two people editing template.yaml is the #1 source of merge pain here.
 # =========================================================================
 
@@ -15,7 +17,7 @@ Parameters:
     AllowedValues: [dev, prod]
   CognitoUserPoolId:
     Type: String
-    Description: From the Cognito pool [M] created (us-east-1_XXXXXXXXX)
+    Description: From the Cognito pool Mustheer created (us-east-1_XXXXXXXXX)
   CognitoAppClientId:
     Type: String
   BedrockModelId:
@@ -26,7 +28,7 @@ Parameters:
 Globals:
   Function:
     Runtime: python3.12
-    Architectures: [arm64]        # ~20% cheaper than x86 for the same work
+    Architectures: [arm64] # ~20% cheaper than x86 for the same work
     Timeout: 15
     MemorySize: 256
     Layers: [!Ref CommonLayer]
@@ -82,7 +84,7 @@ Resources:
     Properties:
       StageName: !Ref Stage
       CorsConfiguration:
-        AllowOrigins: ["*"]          # [C] Sprint 7: lock to the CloudFront domain
+        AllowOrigins: ["*"] # Parshuram Sprint 7: lock to the CloudFront domain
         AllowHeaders: [Content-Type, Authorization]
         AllowMethods: [GET, POST, PATCH, DELETE, OPTIONS]
       Auth:
@@ -111,7 +113,7 @@ Resources:
             Path: /health
             Method: GET
             Auth:
-              Authorizer: NONE      # the one public endpoint
+              Authorizer: NONE # the one public endpoint
 
   OnboardFunction:
     Type: AWS::Serverless::Function
@@ -120,11 +122,11 @@ Resources:
       CodeUri: functions/onboard/
       Handler: handler.lambda_handler
       Policies:
-        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+        - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
       Events:
         Post:
           Type: HttpApi
-          Properties: {ApiId: !Ref HttpApi, Path: /onboard, Method: POST}
+          Properties: { ApiId: !Ref HttpApi, Path: /onboard, Method: POST }
 
   GetPlanFunction:
     Type: AWS::Serverless::Function
@@ -133,14 +135,14 @@ Resources:
       CodeUri: functions/get_plan/
       Handler: handler.lambda_handler
       Policies:
-        - DynamoDBReadPolicy: {TableName: !Ref MainTable}
+        - DynamoDBReadPolicy: { TableName: !Ref MainTable }
       Events:
         GetPlan:
           Type: HttpApi
-          Properties: {ApiId: !Ref HttpApi, Path: /plan, Method: GET}
+          Properties: { ApiId: !Ref HttpApi, Path: /plan, Method: GET }
         ListPlans:
           Type: HttpApi
-          Properties: {ApiId: !Ref HttpApi, Path: /plans, Method: GET}
+          Properties: { ApiId: !Ref HttpApi, Path: /plans, Method: GET }
 
   # --- the AI one: bigger timeout and memory, and Bedrock permissions ---
   GeneratePlanFunction:
@@ -149,10 +151,10 @@ Resources:
       FunctionName: !Sub fitplan-${Stage}-generate-plan
       CodeUri: functions/generate_plan/
       Handler: handler.lambda_handler
-      Timeout: 60                  # cold Bedrock call + one retry
+      Timeout: 60 # cold Bedrock call + one retry
       MemorySize: 512
       Policies:
-        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+        - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]
@@ -165,7 +167,8 @@ Resources:
       Events:
         Post:
           Type: HttpApi
-          Properties: {ApiId: !Ref HttpApi, Path: /plan/generate, Method: POST}
+          Properties:
+            { ApiId: !Ref HttpApi, Path: /plan/generate, Method: POST }
 
   LogDailyFunction:
     Type: AWS::Serverless::Function
@@ -174,11 +177,11 @@ Resources:
       CodeUri: functions/log_daily/
       Handler: handler.lambda_handler
       Policies:
-        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
+        - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
       Events:
         Post:
           Type: HttpApi
-          Properties: {ApiId: !Ref HttpApi, Path: /logs/daily, Method: POST}
+          Properties: { ApiId: !Ref HttpApi, Path: /logs/daily, Method: POST }
 
   GetLogsFunction:
     Type: AWS::Serverless::Function
@@ -187,11 +190,11 @@ Resources:
       CodeUri: functions/get_logs/
       Handler: handler.lambda_handler
       Policies:
-        - DynamoDBReadPolicy: {TableName: !Ref MainTable}
+        - DynamoDBReadPolicy: { TableName: !Ref MainTable }
       Events:
         Get:
           Type: HttpApi
-          Properties: {ApiId: !Ref HttpApi, Path: /logs/daily, Method: GET}
+          Properties: { ApiId: !Ref HttpApi, Path: /logs/daily, Method: GET }
 
   # --- scheduled, unattended: needs a DLQ ---
   WeeklyPlanGenFunction:
@@ -200,7 +203,7 @@ Resources:
       FunctionName: !Sub fitplan-${Stage}-weekly-plan-gen
       CodeUri: functions/weekly_plan_gen/
       Handler: handler.lambda_handler
-      Timeout: 900                 # 15 min: it loops over users
+      Timeout: 900 # 15 min: it loops over users
       MemorySize: 512
       Environment:
         Variables:
@@ -209,8 +212,8 @@ Resources:
         Type: SQS
         TargetArn: !GetAtt WeeklyDLQ.Arn
       Policies:
-        - DynamoDBCrudPolicy: {TableName: !Ref MainTable}
-        - SQSSendMessagePolicy: {QueueName: !GetAtt WeeklyDLQ.QueueName}
+        - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
+        - SQSSendMessagePolicy: { QueueName: !GetAtt WeeklyDLQ.QueueName }
         - Statement:
             - Effect: Allow
               Action: [bedrock:InvokeModel]
@@ -226,12 +229,13 @@ Resources:
             # Mondays 02:00 UTC = 07:30 IST. Plan is ready before the user wakes.
             ScheduleExpression: cron(0 2 ? * MON *)
             Description: Regenerate weekly plans for all active users
+            State: DISABLED # Sprint 6: enable once weekly_plan_gen has code + fan-out guard
 
   WeeklyDLQ:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: !Sub fitplan-${Stage}-weekly-dlq
-      MessageRetentionPeriod: 1209600   # 14 days
+      MessageRetentionPeriod: 1209600 # 14 days
 
   # -----------------------------------------------------------------------
   # Log retention. The default is "never expire", which quietly costs money.

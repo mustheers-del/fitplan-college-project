@@ -1,0 +1,14 @@
+version = 0.1
+
+[default.deploy.parameters]
+stack_name = "fitplan-dev"
+resolve_s3 = true
+s3_prefix = "fitplan-dev"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"dev\" CognitoUserPoolId=\"us-east-1_CLUrF0val\" CognitoAppClientId=\"7pir6qcl9ln6ofhoua49ol0hfk\" BedrockModelId=\"us.amazon.nova-lite-v1:0\""
+image_repositories = []
+
+[default.global.parameters]
+region = "us-east-1"
