@@ -61,3 +61,22 @@ jobs:
 
       - name: Run tests
         run: pytest -q
+
+        template:
+    name: SAM Template Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install cfn-lint
+        run: pip install cfn-lint
+
+      - name: Lint SAM template
+        run: cfn-lint backend/template.yaml
