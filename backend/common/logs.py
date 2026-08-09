@@ -8,7 +8,8 @@ inside weekly_plan_gen. Saving must be instant and free.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from typing import Optional
 
 from common import dynamo
 from common.models import DailyLogIn
@@ -16,13 +17,13 @@ from common.models import DailyLogIn
 
 def save_daily_log(user_id: str, entry: DailyLogIn) -> dict:
     data = entry.model_dump(by_alias=True, mode="json")
-    data["createdAt"] = datetime.now(UTC).isoformat()
+    data["createdAt"] = datetime.now(timezone.utc).isoformat()
     data["parsed"] = False
     dynamo.put_item(user_id, dynamo.sk_log(entry.date.isoformat()), data)
     return data
 
 
-def get_log(user_id: str, day: str) -> dict | None:
+def get_log(user_id: str, day: str) -> Optional[dict]:
     return dynamo.get_item(user_id, dynamo.sk_log(day))
 
 
@@ -31,7 +32,7 @@ def get_logs_range(user_id: str, start: str, end: str) -> list[dict]:
 
 
 def get_recent_logs(user_id: str, days: int = 7) -> list[dict]:
-    today = datetime.now(UTC).date()
+    today = datetime.now(timezone.utc).date()
     start = (today - timedelta(days=days - 1)).isoformat()
     return get_logs_range(user_id, start, today.isoformat())
 

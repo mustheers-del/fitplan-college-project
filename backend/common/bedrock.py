@@ -13,7 +13,7 @@ import json
 import logging
 import os
 import re
-from typing import Any, TypeVar
+from typing import Any, Type, TypeVar
 
 import boto3
 from botocore.config import Config
@@ -130,64 +130,49 @@ def extract_json(text: str) -> dict:
     return json.loads(text[start : end + 1])
 
 
-def invoke_structured[T](
+def invoke_structured(
     system: str,
     user_content: str,
-    model_cls: type[T],
+    model_cls: Type[T],
     max_tokens: int = 4000,
     temperature: float = 0.4,
 ) -> tuple[T, BedrockResult, str]:
     """
-    Call Bedrock and validate the output against model_cls.
+    Call Bedrock and validate the output against `model_cls`.
 
-    Uses assistant prefill to force JSON, and allows exactly one correction
-    retry.
+    Uses assistant prefill to force JSON, and allows EXACTLY ONE correction
+    retry. Not a loop — a loop is how you get a surprise AWS bill.
+
+    Returns (validated_model, last_result, source) where source is
+    "llm" or "llm_retry". Raises if both attempts fail; the caller decides
+    whether to fall back to a static plan.
     """
     messages = [
         {"role": "user", "content": user_content},
-        {"role": "assistant", "content": "{"},
+        {"role": "assistant", "content": "{"},  # prefill: forces JSON start
     ]
 
-    first = invoke(
-        system,
-        messages,
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
+    first = invoke(system, messages, max_tokens=max_tokens, temperature=temperature)
 
     try:
-        return (
-            model_cls.model_validate(extract_json(first.text)),
-            first,
-            "llm",
-        )
+        return model_cls.model_validate(extract_json(first.text)), first, "llm"
     except (ValidationError, ValueError, json.JSONDecodeError) as exc:
         log.warning("first attempt failed validation: %s", exc)
 
-        retry_messages = [
-            {"role": "user", "content": user_content},
-            {"role": "assistant", "content": "{" + first.text},
-            {
-                "role": "user",
-                "content": (
-                    "That response failed schema validation with this error:\n\n"
-                    f"{exc}\n\n"
-                    "Return the corrected JSON object only. "
-                    "No explanation, no markdown."
-                ),
-            },
-            {"role": "assistant", "content": "{"},
-        ]
+    # --- the one and only retry ---
+    retry_messages = [
+        {"role": "user", "content": user_content},
+        {"role": "assistant", "content": "{" + first.text},
+        {
+            "role": "user",
+            "content": (
+                f"That response failed schema validation with this error:\n\n{exc}\n\n"
+                "Return the corrected JSON object only. No explanation, no markdown."
+            ),
+        },
+        {"role": "assistant", "content": "{"},
+    ]
+    second = invoke(system, retry_messages, max_tokens=max_tokens, temperature=0.2)
 
-    second = invoke(
-        system,
-        retry_messages,
-        max_tokens=max_tokens,
-        temperature=0.2,
-    )
-
-    return (
-        model_cls.model_validate(extract_json(second.text)),
-        second,
-        "llm_retry",
-    )
+    # If this raises, it propagates — the caller catches it and uses a fallback.
+    return model_cls.model_validate(extract_json(second.text)), second, "llm_retry"

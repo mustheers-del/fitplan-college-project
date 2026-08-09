@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import os
 from decimal import Decimal
-from typing import Any
+from typing import Any, Optional
 
 import boto3
 from boto3.dynamodb.conditions import Key
@@ -89,7 +89,7 @@ def sk_log(day: str) -> str:
 # --------------------------------------------------------------------------
 
 
-def get_item(user_id: str, sk: str) -> dict | None:
+def get_item(user_id: str, sk: str) -> Optional[dict]:
     resp = table().get_item(Key={"PK": pk(user_id), "SK": sk})
     item = resp.get("Item")
     return from_dynamo(item) if item else None

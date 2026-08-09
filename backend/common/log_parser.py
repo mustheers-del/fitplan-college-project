@@ -8,6 +8,7 @@ That is a 7x cost difference for zero benefit.
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
 from common import bedrock
 from common.models import AdherenceSummary, ParsedWeek
@@ -16,7 +17,7 @@ from common.prompts import PARSE_SYSTEM_PROMPT, build_parse_user_prompt
 log = logging.getLogger(__name__)
 
 
-def parse_logs_batch(logs: list[dict], planned_sessions: int) -> ParsedWeek | None:
+def parse_logs_batch(logs: list[dict], planned_sessions: int) -> Optional[ParsedWeek]:
     """
     Returns None if there is nothing to parse, or if parsing fails.
     A failed parse must NOT block plan generation -- we just generate
@@ -24,13 +25,13 @@ def parse_logs_batch(logs: list[dict], planned_sessions: int) -> ParsedWeek | No
     """
     usable = [
         {
-            "date": log.get("date"),
-            "workoutText": (log.get("workoutText") or "")[:2000],
-            "mealsText": (log.get("mealsText") or "")[:2000],
-            "tags": log.get("tags", []),
+            "date": l.get("date"),
+            "workoutText": (l.get("workoutText") or "")[:2000],
+            "mealsText": (l.get("mealsText") or "")[:2000],
+            "tags": l.get("tags", []),
         }
-        for log in logs
-        if (log.get("workoutText") or log.get("mealsText"))
+        for l in logs
+        if (l.get("workoutText") or l.get("mealsText"))
     ]
 
     if not usable:

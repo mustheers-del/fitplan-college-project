@@ -4,9 +4,7 @@ Sprint 1, [M]: prove Bedrock works before building any Lambda around it.
     python scripts/bedrock_smoke.py
 """
 
-import os
-import sys
-
+import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from common import bedrock

@@ -11,7 +11,8 @@ once here, wrap it twice.
 from __future__ import annotations
 
 import logging
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
+from typing import Optional
 
 from common import bedrock, dynamo
 from common.models import ParsedWeek, UserProfile, WeeklyPlan
@@ -20,13 +21,13 @@ from common.prompts import PLAN_SYSTEM_PROMPT, build_plan_user_prompt
 log = logging.getLogger(__name__)
 
 
-def current_week_start(today: date | None = None) -> str:
+def current_week_start(today: Optional[date] = None) -> str:
     """Monday of the current week, as YYYY-MM-DD."""
-    today = today or datetime.now(UTC).date()
+    today = today or datetime.now(timezone.utc).date()
     return (today - timedelta(days=today.weekday())).isoformat()
 
 
-def get_plan(user_id: str, week_start: str | None = None) -> WeeklyPlan | None:
+def get_plan(user_id: str, week_start: Optional[str] = None) -> Optional[WeeklyPlan]:
     week_start = week_start or current_week_start()
     item = dynamo.get_item(user_id, dynamo.sk_plan(week_start))
     return WeeklyPlan.model_validate(item) if item else None
@@ -39,9 +40,9 @@ def list_plan_weeks(user_id: str, limit: int = 20) -> list[str]:
 
 def generate_plan_for_user(
     user_id: str,
-    week_start: str | None = None,
+    week_start: Optional[str] = None,
     force: bool = False,
-    adherence: ParsedWeek | None = None,
+    adherence: Optional[ParsedWeek] = None,
 ) -> WeeklyPlan:
     """
     The core function. Called by:
@@ -87,7 +88,7 @@ def generate_plan_for_user(
         source, prompt_tokens, completion_tokens = "fallback", 0, 0
 
     plan.week_start_date = date.fromisoformat(week_start)
-    plan.generated_at = datetime.now(UTC)
+    plan.generated_at = datetime.now(timezone.utc)
     plan.model_used = bedrock.MODEL_ID
     plan.prompt_tokens = prompt_tokens
     plan.completion_tokens = completion_tokens

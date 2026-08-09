@@ -8,10 +8,7 @@ times in a row, the prompt is done.
     python scripts/eval_plans.py
 """
 
-import os
-import sys
-import time
-
+import sys, os, time
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from common import bedrock

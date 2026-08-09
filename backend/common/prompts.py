@@ -7,6 +7,7 @@ OWNER: [M] Mustheer.
 from __future__ import annotations
 
 import json
+from typing import Optional
 
 from common.models import ParsedWeek, UserProfile, WeeklyPlan
 
@@ -44,8 +45,8 @@ something concrete about this week's plan. No generic motivation."""
 def build_plan_user_prompt(
     profile: UserProfile,
     week_start: str,
-    previous_plan: WeeklyPlan | None = None,
-    adherence: ParsedWeek | None = None,
+    previous_plan: Optional[WeeklyPlan] = None,
+    adherence: Optional[ParsedWeek] = None,
 ) -> str:
     """
     Compact user turn. Note separators=(",", ":") — pretty-printing JSON into
