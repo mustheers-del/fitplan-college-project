@@ -12,7 +12,6 @@ on:
       - dev
 
 jobs:
-
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest
@@ -35,7 +34,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
 
   backend:
     name: Backend Tests
@@ -62,7 +60,7 @@ jobs:
       - name: Run tests
         run: pytest -q
 
-        template:
+  template:
     name: SAM Template Lint
     runs-on: ubuntu-latest
 
