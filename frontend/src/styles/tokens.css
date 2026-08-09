@@ -151,3 +151,48 @@ button {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+/* TEMPORARY compatibility aliases */
+:root {
+  --c-primary: var(--color-primary);
+  --c-primary-hover: var(--color-primary-hover);
+  --c-bg: var(--color-bg);
+  --c-surface: var(--color-surface);
+  --c-border: var(--color-border);
+  --c-text: var(--color-text);
+  --c-text-secondary: var(--color-text-muted);
+  --c-success: var(--color-success);
+  --c-warning: var(--color-warning);
+  --c-danger: var(--color-danger);
+
+  --sp-1: var(--space-1);
+  --sp-2: var(--space-2);
+  --sp-3: var(--space-3);
+  --sp-4: var(--space-4);
+  --sp-5: var(--space-5);
+  --sp-6: var(--space-6);
+  --sp-8: var(--space-8);
+  --sp-10: var(--space-10);
+  --sp-12: var(--space-12);
+
+  --r-sm: var(--radius-sm);
+  --r-md: var(--radius-md);
+  --r-lg: var(--radius-lg);
+  --r-xl: var(--radius-xl);
+  --r-full: var(--radius-full);
+
+  --fs-xs: var(--text-xs);
+  --fs-sm: var(--text-sm);
+  --fs-base: var(--text-base);
+  --fs-lg: var(--text-lg);
+  --fs-xl: var(--text-xl);
+  --fs-2xl: var(--text-2xl);
+  --fs-3xl: var(--text-3xl);
+
+  --fw-normal: var(--weight-normal);
+  --fw-medium: var(--weight-medium);
+  --fw-semibold: var(--weight-semibold);
+  --fw-bold: var(--weight-bold);
+
+  --sidebar-w: var(--sidebar-width);
+}
