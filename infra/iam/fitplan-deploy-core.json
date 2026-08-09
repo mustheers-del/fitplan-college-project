@@ -1,0 +1,95 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CloudFormationOnFitplanStacks",
+      "Effect": "Allow",
+      "Action": "cloudformation:*",
+      "Resource": [
+        "arn:aws:cloudformation:us-east-1:*:stack/fitplan-*",
+        "arn:aws:cloudformation:us-east-1:*:stack/aws-sam-cli-managed-default/*",
+        "arn:aws:cloudformation:us-east-1:*:changeSet/samcli-deploy*/*"
+      ]
+    },
+    {
+      "Sid": "SamTransformAndValidate",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateChangeSet",
+        "cloudformation:ValidateTemplate",
+        "cloudformation:ListStacks",
+        "cloudformation:DescribeStacks"
+      ],
+      "Resource": [
+        "arn:aws:cloudformation:us-east-1:aws:transform/Serverless-2016-10-31",
+        "*"
+      ]
+    },
+    {
+      "Sid": "SamDeploymentBucket",
+      "Effect": "Allow",
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::aws-sam-cli-managed-default-*",
+        "arn:aws:s3:::aws-sam-cli-managed-default-*/*",
+        "arn:aws:s3:::fitplan-*",
+        "arn:aws:s3:::fitplan-*/*"
+      ]
+    },
+    {
+      "Sid": "S3ListForConsole",
+      "Effect": "Allow",
+      "Action": ["s3:ListAllMyBuckets", "s3:GetBucketLocation"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "LambdaOnFitplanFunctions",
+      "Effect": "Allow",
+      "Action": "lambda:*",
+      "Resource": [
+        "arn:aws:lambda:us-east-1:*:function:fitplan-*",
+        "arn:aws:lambda:us-east-1:*:layer:fitplan-*",
+        "arn:aws:lambda:us-east-1:*:layer:fitplan-*:*"
+      ]
+    },
+    {
+      "Sid": "LambdaListAndGetLayerVersion",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:ListFunctions",
+        "lambda:ListLayers",
+        "lambda:ListLayerVersions",
+        "lambda:GetLayerVersion",
+        "lambda:GetAccountSettings"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "IamRolesForFitplanOnly",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy",
+        "iam:PassRole"
+      ],
+      "Resource": "arn:aws:iam::*:role/fitplan-*"
+    },
+    {
+      "Sid": "IamReadOnly",
+      "Effect": "Allow",
+      "Action": ["iam:ListRoles", "iam:ListPolicies", "iam:GetPolicy", "iam:GetPolicyVersion"],
+      "Resource": "*"
+    }
+  ]
+}

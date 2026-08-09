@@ -1,0 +1,91 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DynamoDbFitplanTables",
+      "Effect": "Allow",
+      "Action": "dynamodb:*",
+      "Resource": [
+        "arn:aws:dynamodb:us-east-1:*:table/fitplan-*",
+        "arn:aws:dynamodb:us-east-1:*:table/fitplan-*/index/*"
+      ]
+    },
+    {
+      "Sid": "DynamoDbList",
+      "Effect": "Allow",
+      "Action": ["dynamodb:ListTables", "dynamodb:DescribeLimits"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "LogsForFitplanLambdas",
+      "Effect": "Allow",
+      "Action": "logs:*",
+      "Resource": [
+        "arn:aws:logs:us-east-1:*:log-group:/aws/lambda/fitplan-*",
+        "arn:aws:logs:us-east-1:*:log-group:/aws/lambda/fitplan-*:*"
+      ]
+    },
+    {
+      "Sid": "LogsDescribeAndInsights",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:StartQuery",
+        "logs:StopQuery",
+        "logs:GetQueryResults",
+        "logs:DescribeQueries"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SqsFitplanQueues",
+      "Effect": "Allow",
+      "Action": "sqs:*",
+      "Resource": "arn:aws:sqs:us-east-1:*:fitplan-*"
+    },
+    {
+      "Sid": "SqsList",
+      "Effect": "Allow",
+      "Action": "sqs:ListQueues",
+      "Resource": "*"
+    },
+    {
+      "Sid": "SchedulerFitplanSchedules",
+      "Effect": "Allow",
+      "Action": "scheduler:*",
+      "Resource": [
+        "arn:aws:scheduler:us-east-1:*:schedule/default/fitplan-*",
+        "arn:aws:scheduler:us-east-1:*:schedule-group/default"
+      ]
+    },
+    {
+      "Sid": "SchedulerList",
+      "Effect": "Allow",
+      "Action": ["scheduler:ListSchedules", "scheduler:ListScheduleGroups"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "HttpApiGateway",
+      "Effect": "Allow",
+      "Action": "apigateway:*",
+      "Resource": ["arn:aws:apigateway:us-east-1::/apis", "arn:aws:apigateway:us-east-1::/apis/*"]
+    },
+    {
+      "Sid": "CognitoUserPoolReadAndConfig",
+      "Effect": "Allow",
+      "Action": [
+        "cognito-idp:ListUserPools",
+        "cognito-idp:DescribeUserPool",
+        "cognito-idp:ListUserPoolClients",
+        "cognito-idp:DescribeUserPoolClient"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudFrontForSprint3",
+      "Effect": "Allow",
+      "Action": ["cloudfront:*", "acm:ListCertificates", "acm:DescribeCertificate"],
+      "Resource": "*"
+    }
+  ]
+}
