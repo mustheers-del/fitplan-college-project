@@ -237,11 +237,48 @@ Resources:
 
   # -----------------------------------------------------------------------
   # Log retention. The default is "never expire", which quietly costs money.
+  # One managed log group per function: 7 days on dev, 30 on prod.
   # -----------------------------------------------------------------------
   HealthLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-health
+      RetentionInDays: !If [IsProd, 30, 7]
+
+  OnboardLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-onboard
+      RetentionInDays: !If [IsProd, 30, 7]
+
+  GetPlanLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-get-plan
+      RetentionInDays: !If [IsProd, 30, 7]
+
+  GeneratePlanLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-generate-plan
+      RetentionInDays: !If [IsProd, 30, 7]
+
+  LogDailyLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-log-daily
+      RetentionInDays: !If [IsProd, 30, 7]
+
+  GetLogsLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-get-logs
+      RetentionInDays: !If [IsProd, 30, 7]
+
+  WeeklyPlanGenLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-weekly-plan-gen
       RetentionInDays: !If [IsProd, 30, 7]
 
 Conditions:
