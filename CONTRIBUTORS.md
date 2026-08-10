@@ -6,3 +6,4 @@ so everyone has done the loop once before it matters.
 - Mustheer Shaikh — Tech Lead, AI Engineer
 - Sohail Pancham
 - Aayan Shaikh — Frontend Developer, Display & QA
+-Ankush Raut-Backend
