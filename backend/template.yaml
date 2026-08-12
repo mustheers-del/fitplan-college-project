@@ -281,6 +281,84 @@ Resources:
       LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-weekly-plan-gen
       RetentionInDays: !If [IsProd, 30, 7]
 
+  # -----------------------------------------------------------------------
+  # Frontend hosting (Sprint 3) - private S3 bucket, served via CloudFront.
+  # The bucket is NEVER public; CloudFront reads it with Origin Access Control.
+  # -----------------------------------------------------------------------
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub fitplan-${Stage}-frontend-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub fitplan-${Stage}-frontend-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub fitplan-${Stage} frontend
+        DefaultRootObject: index.html
+        # PriceClass_100 = US + Europe only, cheapest. See PR note re: India.
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: FrontendS3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # Managed-CachingOptimized
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        # SPA routing: React Router owns the paths, not S3. Without these,
+        # navigation works on click but a page refresh 404s.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+
 Conditions:
   IsProd: !Equals [!Ref Stage, prod]
 
@@ -293,3 +371,9 @@ Outputs:
   HealthCheck:
     Description: Sprint 1 exit criteria - curl this
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/health
+  FrontendUrl:
+    Description: Public URL for the frontend - Sprint 3 uploads the build here
+    Value: !Sub https://${FrontendDistribution.DomainName}
+  FrontendBucketName:
+    Description: S3 bucket the built frontend is synced into
+    Value: !Ref FrontendBucket
