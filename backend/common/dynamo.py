@@ -21,7 +21,7 @@ from typing import Any, Optional
 import boto3
 from boto3.dynamodb.conditions import Key
 
-TABLE_NAME = os.environ.get("TABLE_NAME", "fitplan-dev-main")
+TABLE_NAME = os.environ["TABLE_NAME"]
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 _table = None
