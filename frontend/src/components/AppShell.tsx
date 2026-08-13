@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import type { ReactNode } from "react";
+import { useAuth } from "@/auth/AuthContext";
 
 /** Sidebar navigation. Order matches the client mockup — don't reorder. */
 const NAV_ITEMS = [
@@ -18,20 +19,25 @@ interface AppShellProps {
   children?: ReactNode;
   /** href of the current page, used to highlight the sidebar link. */
   active?: string;
-  /** Shown in the top bar. Comes from Cognito once auth lands in Sprint 2. */
+  /** Optional display name. Falls back to Cognito email. */
   userName?: string;
 }
 
 export function AppShell({ children, active, userName }: AppShellProps) {
-  const initials = userName
-    ? userName
-        .trim()
-        .split(/\s+/)
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "?";
+  const { email } = useAuth();
+
+  const displayName = userName ?? email ?? "Not signed in";
+
+  const initials =
+    displayName !== "Not signed in"
+      ? displayName
+          .trim()
+          .split(/\s+/)
+          .map((word) => word[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase()
+      : "?";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -75,8 +81,10 @@ export function AppShell({ children, active, userName }: AppShellProps) {
       <div className="fp-main">
         <header className="fp-topbar">
           <div />
+
           <div className="fp-topbar__user">
-            <span>{userName ?? "Not signed in"}</span>
+            <span>{displayName}</span>
+
             <div className="fp-avatar" aria-hidden="true">
               {initials}
             </div>
