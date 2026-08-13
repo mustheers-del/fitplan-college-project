@@ -1,5 +1,5 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "./useAuth";
+import { useAuth } from "./AuthContext";
 
 /**
  * OWNER: [E], Sprint 2.
@@ -7,9 +7,9 @@ import { useAuth } from "./useAuth";
  * redirect a logged-in user with no profile straight into /onboarding.
  */
 export default function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { userId, loading } = useAuth();
 
   if (loading) return <div style={{ padding: 40 }}>Loading…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!userId) return <Navigate to="/login" replace />;
   return <Outlet />;
 }

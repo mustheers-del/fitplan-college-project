@@ -1,7 +1,78 @@
-/**
- * OWNER: [E] — Sprint 1
- * Match the mockup's left login panel. UI only in Sprint 1; wire Cognito in Sprint 2.
- */
+import { FormEvent, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
+import { useNavigate } from "react-router-dom";
+
 export default function Login() {
-  return <h1 style={{ fontSize: "var(--fs-2xl)" }}>Login</h1>;
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    setError("");
+    setLoading(true);
+
+    try {
+      await signIn(email, password);
+      navigate("/dashboard");
+    } catch (err) {
+      console.error(err);
+      setError("Login failed. Please check your email and password.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: "40px", maxWidth: "400px", margin: "0 auto" }}>
+      <h1>Login</h1>
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: "16px" }}>
+          <label>Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="demo@fitplan.test"
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label>Password</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+            }}
+          />
+        </div>
+
+        {error && <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>}
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </form>
+    </div>
+  );
 }

@@ -18,15 +18,16 @@ import Progress from "./pages/Progress";
 export default function App() {
   return (
     <Routes>
-      {/* public — [E] */}
+      {/* public */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
       {/* authenticated */}
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />
+
         <Route element={<AppShell />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/workout" element={<WorkoutDetails />} />
           <Route path="/meals" element={<MealPlan />} />
@@ -35,7 +36,7 @@ export default function App() {
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
