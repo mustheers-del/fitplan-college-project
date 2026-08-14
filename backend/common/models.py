@@ -58,7 +58,7 @@ class UserProfile(BaseModel):
     supplements: list[str] = Field(default_factory=list)
     budget_tier: Literal["low", "medium", "high"] = Field(default="medium", alias="budgetTier")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
     @field_validator("equipment")
     @classmethod
@@ -79,7 +79,7 @@ class WorkoutExercise(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=200)
     target_muscle: Optional[str] = Field(default=None, alias="targetMuscle")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 class WorkoutDay(BaseModel):
@@ -90,7 +90,7 @@ class WorkoutDay(BaseModel):
     est_calories: int = Field(default=0, ge=0, le=2000, alias="estCalories")
     exercises: list[WorkoutExercise] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
     @field_validator("exercises")
     @classmethod
@@ -110,7 +110,7 @@ class Meal(BaseModel):
     prep_minutes: int = Field(default=15, ge=0, le=180, alias="prepMinutes")
     ingredients: list[str] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 class MealDay(BaseModel):
@@ -119,7 +119,7 @@ class MealDay(BaseModel):
     total_calories: int = Field(ge=0, le=8000, alias="totalCalories")
     total_protein_g: float = Field(ge=0, le=500, alias="totalProteinG")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 class WeeklyPlan(BaseModel):
@@ -139,7 +139,7 @@ class WeeklyPlan(BaseModel):
         default="llm", alias="generationSource"
     )
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
     @field_validator("workout_plan", "meal_plan")
     @classmethod
@@ -165,7 +165,7 @@ class DailyLogIn(BaseModel):
     meals_text: str = Field(default="", max_length=4000, alias="mealsText")
     tags: list[str] = Field(default_factory=list)
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "forbid"}
 
 
 class DailyLog(DailyLogIn):
@@ -176,7 +176,7 @@ class DailyLog(DailyLogIn):
     parsed_workout: Optional[dict] = Field(default=None, alias="parsedWorkout")
     parsed_meals: Optional[dict] = Field(default=None, alias="parsedMeals")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "ignore"}
 
 
 # --------------------------------------------------------------------------
@@ -191,6 +191,8 @@ class ParsedDay(BaseModel):
     meals: list[dict] = Field(default_factory=list)
     deviations: list[str] = Field(default_factory=list)
 
+    model_config = {"extra": "allow"}
+
 
 class AdherenceSummary(BaseModel):
     sessions_planned: int = Field(ge=0, le=7, alias="sessionsPlanned")
@@ -198,9 +200,11 @@ class AdherenceSummary(BaseModel):
     avg_adherence: float = Field(ge=0.0, le=1.0, alias="avgAdherence")
     notes: str = Field(default="", max_length=800)
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 class ParsedWeek(BaseModel):
     days: list[ParsedDay]
     summary: AdherenceSummary
+
+    model_config = {"extra": "allow"}
