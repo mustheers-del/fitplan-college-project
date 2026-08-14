@@ -100,23 +100,59 @@ def put_item(user_id: str, sk: str, data: dict) -> None:
     table().put_item(Item=to_dynamo(item))
 
 
-def query_prefix(user_id: str, sk_prefix: str, limit: int = 50, ascending: bool = False) -> list[dict]:
-    """All items for a user whose SK starts with `sk_prefix`."""
-    resp = table().query(
-        KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").begins_with(sk_prefix),
-        Limit=limit,
-        ScanIndexForward=ascending,
-    )
-    return [from_dynamo(i) for i in resp.get("Items", [])]
+def query_prefix(
+    user_id: str, sk_prefix: str, limit: int = 50, ascending: bool = False
+) -> list[dict]:
+    """All items for a user whose SK starts with `sk_prefix`.
+
+    Pages through results — DynamoDB returns at most 1MB per call and signals
+    more via LastEvaluatedKey. Without this, a user's history silently stops
+    at the first page with no error.
+
+    `limit` caps the number of items returned. Pass limit=None for all of them.
+    """
+    items: list[dict] = []
+    kwargs: dict = {}
+
+    while True:
+        resp = table().query(
+            KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").begins_with(sk_prefix),
+            ScanIndexForward=ascending,
+            **kwargs,
+        )
+        items.extend(resp.get("Items", []))
+
+        last_key = resp.get("LastEvaluatedKey")
+        if not last_key or (limit is not None and len(items) >= limit):
+            break
+        kwargs["ExclusiveStartKey"] = last_key
+
+    if limit is not None:
+        items = items[:limit]
+    return [from_dynamo(i) for i in items]
 
 
-def query_between(user_id: str, sk_start: str, sk_end: str) -> list[dict]:
-    """Range query — e.g. a week of DAILYLOG# entries."""
-    resp = table().query(
-        KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").between(sk_start, sk_end),
-        ScanIndexForward=True,
-    )
-    return [from_dynamo(i) for i in resp.get("Items", [])]
+def query_between(user_id: str, sk_start: str, sk_end: str, limit: int | None = None) -> list[dict]:
+    """Range query — e.g. a week of DAILYLOG# entries. Pages through results."""
+    items: list[dict] = []
+    kwargs: dict = {}
+
+    while True:
+        resp = table().query(
+            KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").between(sk_start, sk_end),
+            ScanIndexForward=True,
+            **kwargs,
+        )
+        items.extend(resp.get("Items", []))
+
+        last_key = resp.get("LastEvaluatedKey")
+        if not last_key or (limit is not None and len(items) >= limit):
+            break
+        kwargs["ExclusiveStartKey"] = last_key
+
+    if limit is not None:
+        items = items[:limit]
+    return [from_dynamo(i) for i in items]
 
 
 def delete_item(user_id: str, sk: str) -> None:
