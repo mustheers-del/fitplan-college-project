@@ -58,4 +58,8 @@ def create_or_update_profile(user_id: str, profile: UserProfile) -> UserProfile:
 
 def get_profile(user_id: str) -> Optional[UserProfile]:
     item = dynamo.get_item(user_id, dynamo.SK_PROFILE)
-    return UserProfile.model_validate(item) if item else None
+    if not item:
+        return None
+    for k in ("PK", "SK", "createdAt", "updatedAt"):
+        item.pop(k, None)
+    return UserProfile.model_validate(item)
