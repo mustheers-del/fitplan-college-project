@@ -1,6 +1,6 @@
 import { FormEvent, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -29,13 +29,21 @@ export default function Login() {
   };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "400px", margin: "0 auto" }}>
+    <div
+      style={{
+        padding: "40px",
+        maxWidth: "400px",
+        margin: "0 auto",
+      }}
+    >
       <h1>Login</h1>
 
       <form onSubmit={handleSubmit}>
         <div style={{ marginBottom: "16px" }}>
-          <label>Email</label>
+          <label htmlFor="email">Email</label>
+
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -51,8 +59,10 @@ export default function Login() {
         </div>
 
         <div style={{ marginBottom: "16px" }}>
-          <label>Password</label>
+          <label htmlFor="password">Password</label>
+
           <input
+            id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -67,12 +77,25 @@ export default function Login() {
           />
         </div>
 
-        {error && <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>}
+        {error && (
+          <p
+            style={{
+              color: "red",
+              marginBottom: "16px",
+            }}
+          >
+            {error}
+          </p>
+        )}
 
         <button type="submit" disabled={loading}>
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+
+      <p style={{ marginTop: "20px" }}>
+        Don't have an account? <Link to="/signup">Sign up</Link>
+      </p>
     </div>
   );
 }
