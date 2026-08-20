@@ -32,7 +32,7 @@ for FN in \
   fitplan-dev-health \
   fitplan-dev-onboard \
   fitplan-dev-get-plan \
-  fitplan-dev-get-plans \
+  fitplan-dev-weekly-plan-gen \
   fitplan-dev-generate-plan \
   fitplan-dev-log-daily \
   fitplan-dev-get-logs
