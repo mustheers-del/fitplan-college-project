@@ -162,6 +162,19 @@ Resources:
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
                 - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+        - Statement:
+            - Effect: Allow
+              # OpenRouter API key - SecureString created by Mustheer.
+              Action: [ssm:GetParameter]
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/fitplan_openrouter_key
+            - Effect: Allow
+              # SecureString decryption. ViaService means this role can only
+              # decrypt through SSM, never against KMS directly.
+              Action: [kms:Decrypt]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
       Events:
         Post:
           Type: HttpApi
