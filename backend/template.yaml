@@ -22,6 +22,14 @@ Parameters:
     Type: String
     Default: us.amazon.nova-lite-v1:0
     Description: Use the us. inference profile, never the bare model ID
+  EnableFrontendHosting:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      Sprint 3 frontend hosting (S3 + CloudFront). OFF by default because the
+      AWS account is not yet verified for CloudFront, and leaving it on blocks
+      every backend deploy. Flip to true once verification clears.
 
 Globals:
   Function:
@@ -300,6 +308,7 @@ Resources:
   # -----------------------------------------------------------------------
   FrontendBucket:
     Type: AWS::S3::Bucket
+    Condition: FrontendHostingEnabled
     Properties:
       BucketName: !Sub fitplan-${Stage}-frontend-${AWS::AccountId}
       PublicAccessBlockConfiguration:
@@ -313,6 +322,7 @@ Resources:
 
   FrontendOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
+    Condition: FrontendHostingEnabled
     Properties:
       OriginAccessControlConfig:
         Name: !Sub fitplan-${Stage}-frontend-oac
@@ -322,6 +332,7 @@ Resources:
 
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
+    Condition: FrontendHostingEnabled
     Properties:
       DistributionConfig:
         Enabled: true
@@ -357,6 +368,7 @@ Resources:
 
   FrontendBucketPolicy:
     Type: AWS::S3::BucketPolicy
+    Condition: FrontendHostingEnabled
     Properties:
       Bucket: !Ref FrontendBucket
       PolicyDocument:
@@ -374,6 +386,7 @@ Resources:
 
 Conditions:
   IsProd: !Equals [!Ref Stage, prod]
+  FrontendHostingEnabled: !Equals [!Ref EnableFrontendHosting, "true"]
 
 Outputs:
   ApiUrl:
@@ -385,8 +398,10 @@ Outputs:
     Description: Sprint 1 exit criteria - curl this
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/health
   FrontendUrl:
+    Condition: FrontendHostingEnabled
     Description: Public URL for the frontend - Sprint 3 uploads the build here
     Value: !Sub https://${FrontendDistribution.DomainName}
   FrontendBucketName:
+    Condition: FrontendHostingEnabled
     Description: S3 bucket the built frontend is synced into
     Value: !Ref FrontendBucket
