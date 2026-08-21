@@ -2,7 +2,7 @@
  * TypeScript mirrors of the backend Pydantic models.
  * OWNER: Aayan, in direct coordination with Ankush.
  *
- * You two own opposite ends of the same contract. When [B] changes
+ * You two own opposite ends of the same contract. When Ankush changes
  * common/models.py, this file changes in the SAME sprint. A drift here is
  * the classic "works in Postman, breaks in the app" bug.
  *
@@ -40,7 +40,17 @@ export type MealSlot = "breakfast" | "lunch" | "dinner" | "snack";
 export type BudgetTier = "low" | "medium" | "high";
 export type GenerationSource = "llm" | "llm_retry" | "fallback";
 
+/**
+ * Request shape — what the onboarding wizard SENDS.
+ * Fields with a backend default are optional here; the backend fills them in.
+ * Fields with no default are required — the backend can't invent them.
+ *
+ * Note: Ankush has raised splitting this into UserProfileInput (request) and
+ * UserProfile (response, everything present) the way the backend has
+ * DailyLogIn vs DailyLog — pending a call with Mustheer.
+ */
 export interface UserProfile {
+  // required — no default in models.py
   age: number;
   sex: Sex;
   heightCm: number;
@@ -49,17 +59,21 @@ export interface UserProfile {
   activityLevel: ActivityLevel;
   experience: Experience;
   daysPerWeek: number;
-  equipment: string[];
+
+  // optional — models.py supplies a default
   split?: Split;
-  injuries: string[];
-  mealPref: MealPref;
-  cuisine: string[];
-  allergies: string[];
-  mealsPerDay: number;
-  cookingTime: number;
+  equipment?: string[];
+  injuries?: string[];
+  mealPref?: MealPref;
+  cuisine?: string[];
+  allergies?: string[];
+  mealsPerDay?: number;
+  cookingTime?: number;
+  supplements?: string[];
+  budgetTier?: BudgetTier;
+
+  // optional and nullable — defaults to None in models.py
   calorieTarget?: number | null;
-  supplements: string[];
-  budgetTier: BudgetTier;
 }
 
 export interface WorkoutExercise {
@@ -123,11 +137,13 @@ export interface DailyLog extends DailyLogIn {
   parsedWorkout?: Record<string, unknown> | null;
   parsedMeals?: Record<string, unknown> | null;
 }
+
 /** Frontend-only shape for API error responses — no counterpart in models.py. */
 export interface ApiError {
   error: string;
   detail?: unknown;
 }
+
 export interface ParsedDay {
   date: string;
   completed: boolean;
