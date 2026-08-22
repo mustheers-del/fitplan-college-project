@@ -22,6 +22,34 @@ Parameters:
     Type: String
     Default: us.amazon.nova-lite-v1:0
     Description: Use the us. inference profile, never the bare model ID
+  AiProvider:
+    Type: String
+    Default: openrouter
+    AllowedValues: [openrouter, bedrock]
+    Description: >-
+      Which AI backend the plan generator calls. Bedrock model access was
+      never granted on this account, so openrouter is the working default.
+      Kept as a parameter so we can switch back without a code change if
+      Bedrock is ever approved.
+  OpenRouterModelId:
+    Type: String
+    Default: anthropic/claude-haiku-4.5
+    Description: OpenRouter model slug used for plan generation.
+  OpenRouterKeyParam:
+    Type: String
+    Default: fitplan_openrouter_key
+    Description: >-
+      Name of the SSM SecureString holding the OpenRouter API key. The key
+      itself is never an environment variable - the function reads and
+      decrypts it at runtime. The IAM policy below is scoped to this exact
+      parameter name, so the two cannot drift apart.
+  OpenRouterTimeout:
+    Type: String
+    Default: "45"
+    Description: >-
+      Seconds to wait on an OpenRouter response before giving up. Must stay
+      below GeneratePlanFunction's 60s Timeout so the function has time to
+      log the failure and return a clean error instead of being killed.
   EnableFrontendHosting:
     Type: String
     Default: "false"
@@ -43,6 +71,10 @@ Globals:
         TABLE_NAME: !Ref MainTable
         STAGE: !Ref Stage
         BEDROCK_MODEL_ID: !Ref BedrockModelId
+        AI_PROVIDER: !Ref AiProvider
+        OPENROUTER_MODEL_ID: !Ref OpenRouterModelId
+        OPENROUTER_KEY_PARAM: !Ref OpenRouterKeyParam
+        OPENROUTER_TIMEOUT: !Ref OpenRouterTimeout
         POWERTOOLS_SERVICE_NAME: fitplan
         LOG_LEVEL: INFO
 
@@ -173,8 +205,10 @@ Resources:
         - Statement:
             - Effect: Allow
               # OpenRouter API key - SecureString created by Mustheer.
+              # Scoped to the OpenRouterKeyParam parameter so the permission
+              # and the parameter name can never drift apart.
               Action: [ssm:GetParameter]
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/fitplan_openrouter_key
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
             - Effect: Allow
               # SecureString decryption. ViaService means this role can only
               # decrypt through SSM, never against KMS directly.
@@ -241,6 +275,12 @@ Resources:
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
                 - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+        # NOTE (Parshuram): this function calls the AI too, so when it moves to
+        # OpenRouter it will need the same ssm:GetParameter + kms:Decrypt block
+        # that GeneratePlanFunction has above. Harmless today - the schedule is
+        # DISABLED and the handler has no code yet - but whoever enables it in
+        # Sprint 6 hits an AccessDenied on the first parameter read. Left out
+        # deliberately pending Mustheer's call, not an oversight.
       Events:
         WeeklySchedule:
           Type: ScheduleV2
