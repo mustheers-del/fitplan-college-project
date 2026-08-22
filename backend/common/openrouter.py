@@ -102,11 +102,14 @@ def invoke(
     ]
 
     body = {
-        "model": MODEL_ID,
-        "messages": api_messages,
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-    }
+    "model": MODEL_ID,
+    "messages": api_messages,
+    "max_tokens": max_tokens,
+    "temperature": temperature,
+    "response_format": {
+        "type": "json_object",
+    },
+}
 
     request = urllib.request.Request(
         OPENROUTER_URL,

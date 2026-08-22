@@ -14,7 +14,7 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
-from common import bedrock, dynamo
+from common import ai, dynamo, onboarding
 from common.models import ParsedWeek, UserProfile, WeeklyPlan
 from common.prompts import PLAN_SYSTEM_PROMPT, build_plan_user_prompt
 
@@ -60,10 +60,9 @@ def generate_plan_for_user(
             log.info("plan already exists for %s week %s", user_id, week_start)
             return existing
 
-    profile_item = dynamo.get_item(user_id, dynamo.SK_PROFILE)
-    if not profile_item:
-        raise ValueError("user has no profile — complete onboarding first")
-    profile = UserProfile.model_validate(profile_item)
+    profile = onboarding.get_profile(user_id)
+    if not profile:
+        raise ValueError("user has no profile - complete onboarding first")
 
     previous_plan = None
     if adherence:
@@ -73,7 +72,7 @@ def generate_plan_for_user(
     user_prompt = build_plan_user_prompt(profile, week_start, previous_plan, adherence)
 
     try:
-        plan, result, source = bedrock.invoke_structured(
+        plan, result, source = ai.invoke_structured(
             system=PLAN_SYSTEM_PROMPT,
             user_content=user_prompt,
             model_cls=WeeklyPlan,
@@ -89,7 +88,7 @@ def generate_plan_for_user(
 
     plan.week_start_date = date.fromisoformat(week_start)
     plan.generated_at = datetime.now(timezone.utc)
-    plan.model_used = bedrock.MODEL_ID
+    plan.model_used = ai.model_id()
     plan.prompt_tokens = prompt_tokens
     plan.completion_tokens = completion_tokens
     plan.generation_source = source
