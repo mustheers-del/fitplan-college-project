@@ -191,6 +191,12 @@ Resources:
       Handler: handler.lambda_handler
       Timeout: 60 # cold Bedrock call + one retry
       MemorySize: 512
+      Environment:
+        Variables:
+          AI_PROVIDER: openrouter
+          OPENROUTER_MODEL_ID: anthropic/claude-haiku-4.5
+          OPENROUTER_KEY_PARAM: fitplan_openrouter_key
+          OPENROUTER_TIMEOUT: "45"
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
         - Statement:

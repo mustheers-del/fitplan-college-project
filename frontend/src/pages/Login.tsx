@@ -4,13 +4,40 @@ import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, signOut, userId, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  if (!authLoading && userId) {
+    return (
+      <div
+        style={{
+          padding: "40px",
+          maxWidth: "400px",
+          margin: "0 auto",
+        }}
+      >
+        <h1>Already signed in</h1>
 
+        <p style={{ marginBottom: "20px" }}>
+          You are already signed in. Sign out before logging in with another
+          account.
+        </p>
+
+        <button
+          type="button"
+          onClick={async () => {
+            await signOut();
+            window.location.reload();
+          }}
+        >
+          Sign out
+        </button>
+      </div>
+    );
+  }
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -20,9 +47,14 @@ export default function Login() {
     try {
       await signIn(email, password);
       navigate("/dashboard");
-    } catch (err) {
-      console.error(err);
-      setError("Login failed. Please check your email and password.");
+    } catch (err: any) {
+      console.error("LOGIN ERROR:", err);
+
+      setError(
+        err?.message ||
+          err?.name ||
+          "Login failed. Please check your email and password.",
+      );
     } finally {
       setLoading(false);
     }
@@ -54,6 +86,8 @@ export default function Login() {
               width: "100%",
               padding: "10px",
               marginTop: "6px",
+              color: "#111827",
+              backgroundColor: "#ffffff",
             }}
           />
         </div>
@@ -73,8 +107,14 @@ export default function Login() {
               width: "100%",
               padding: "10px",
               marginTop: "6px",
+              color: "#111827",
+              backgroundColor: "#ffffff",
             }}
           />
+
+          <p style={{ marginTop: "8px", textAlign: "right" }}>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
         </div>
 
         {error && (
