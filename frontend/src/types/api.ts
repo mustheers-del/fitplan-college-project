@@ -7,6 +7,11 @@
  * the classic "works in Postman, breaks in the app" bug.
  *
  * Note: the API speaks camelCase (Pydantic aliases), so these match 1:1.
+ *
+ * Optionality rule: REQUEST types (UserProfileIn, DailyLogIn) mark
+ * backend-defaulted fields optional, because the backend fills them in.
+ * RESPONSE types mark everything required, because by the time the backend
+ * serialises, every default is already filled.
  */
 
 // Python `date` and `datetime` serialise to ISO strings over JSON,
@@ -45,8 +50,7 @@ export type GenerationSource = "llm" | "llm_retry" | "fallback";
  * Fields with a backend default are optional; the backend fills them in.
  * Fields with no default are required — the backend can't invent them.
  *
- * Mirrors models.py UserProfile. Named to match the backend's
- * DailyLogIn / DailyLog pattern.
+ * Named to match the backend's DailyLogIn / DailyLog pattern.
  */
 export interface UserProfileIn {
   // required — no default in models.py
@@ -113,22 +117,24 @@ export interface UserProfile {
   updatedAt: string;
 }
 
+// --- Response shapes below: everything required, defaults already filled ---
+
 export interface WorkoutExercise {
   name: string;
   sets: number;
   reps: string;
-  restSeconds?: number;
-  notes?: string | null;
-  targetMuscle?: string | null;
+  restSeconds: number;
+  notes: string | null;
+  targetMuscle: string | null;
 }
 
 export interface WorkoutDay {
   day: number;
   title: string;
-  isRestDay?: boolean;
-  durationMin?: number;
-  estCalories?: number;
-  exercises?: WorkoutExercise[];
+  isRestDay: boolean;
+  durationMin: number;
+  estCalories: number;
+  exercises: WorkoutExercise[];
 }
 
 export interface Meal {
@@ -138,8 +144,8 @@ export interface Meal {
   proteinG: number;
   carbsG: number;
   fatsG: number;
-  prepMinutes?: number;
-  ingredients?: string[];
+  prepMinutes: number;
+  ingredients: string[];
 }
 
 export interface MealDay {
@@ -150,17 +156,20 @@ export interface MealDay {
 }
 
 export interface WeeklyPlan {
-  weekStartDate: string;
+  weekStartDate: string; // YYYY-MM-DD
   workoutPlan: WorkoutDay[];
   mealPlan: MealDay[];
-  coachNote?: string | null;
-  generatedAt?: string | null;
-  modelUsed?: string | null;
-  promptTokens?: number | null;
-  completionTokens?: number | null;
-  generationSource?: GenerationSource;
+  coachNote: string | null;
+  generatedAt: string | null;
+  modelUsed: string | null;
+  promptTokens: number | null;
+  completionTokens: number | null;
+  /** "fallback" means AI generation failed — surface a "regenerate" nudge
+   *  rather than silently showing a generic plan. */
+  generationSource: GenerationSource;
 }
 
+/** Request shape — what the daily check-in POSTs. Raw text only. */
 export interface DailyLogIn {
   date: string;
   workoutText?: string;
@@ -168,11 +177,12 @@ export interface DailyLogIn {
   tags?: string[];
 }
 
+/** Response shape — what's stored and returned. */
 export interface DailyLog extends DailyLogIn {
   createdAt: string;
-  parsed?: boolean;
-  parsedWorkout?: Record<string, unknown> | null;
-  parsedMeals?: Record<string, unknown> | null;
+  parsed: boolean;
+  parsedWorkout: Record<string, unknown> | null;
+  parsedMeals: Record<string, unknown> | null;
 }
 
 /** Frontend-only shape for API error responses — no counterpart in models.py. */
