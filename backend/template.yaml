@@ -85,14 +85,11 @@ Resources:
   # -----------------------------------------------------------------------
   CommonLayer:
     Type: AWS::Serverless::LayerVersion
-    Metadata:
-      BuildMethod: python3.12
     Properties:
       LayerName: !Sub fitplan-${Stage}-common
       ContentUri: layer/
       CompatibleRuntimes: [python3.12]
       RetentionPolicy: Delete
-
   # -----------------------------------------------------------------------
   # Data - single table, on-demand. NEVER provisioned capacity.
   # -----------------------------------------------------------------------
