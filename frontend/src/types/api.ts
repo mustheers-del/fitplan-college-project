@@ -42,14 +42,13 @@ export type GenerationSource = "llm" | "llm_retry" | "fallback";
 
 /**
  * Request shape — what the onboarding wizard SENDS.
- * Fields with a backend default are optional here; the backend fills them in.
+ * Fields with a backend default are optional; the backend fills them in.
  * Fields with no default are required — the backend can't invent them.
  *
- * Note: Ankush has raised splitting this into UserProfileInput (request) and
- * UserProfile (response, everything present) the way the backend has
- * DailyLogIn vs DailyLog — pending a call with Mustheer.
+ * Mirrors models.py UserProfile. Named to match the backend's
+ * DailyLogIn / DailyLog pattern.
  */
-export interface UserProfile {
+export interface UserProfileIn {
   // required — no default in models.py
   age: number;
   sex: Sex;
@@ -74,6 +73,44 @@ export interface UserProfile {
 
   // optional and nullable — defaults to None in models.py
   calorieTarget?: number | null;
+}
+
+/**
+ * Response shape — what GET /profile RETURNS.
+ * Every defaulted field is present, because the backend has filled it in.
+ *
+ * NOTE: this does NOT `extends UserProfileIn`, unlike DailyLog extends
+ * DailyLogIn. There, the stored type only ADDS fields. Here the optionality
+ * flips — fields that are optional on the way in are guaranteed on the way
+ * out — and `extends` cannot turn an optional field into a required one.
+ * Written out explicitly so the difference is visible.
+ *
+ * Storage-only fields (PK, SK) are deliberately absent — never returned.
+ */
+export interface UserProfile {
+  age: number;
+  sex: Sex;
+  heightCm: number;
+  weightKg: number;
+  goal: Goal;
+  activityLevel: ActivityLevel;
+  experience: Experience;
+  daysPerWeek: number;
+  split: Split;
+  equipment: string[];
+  injuries: string[];
+  mealPref: MealPref;
+  cuisine: string[];
+  allergies: string[];
+  mealsPerDay: number;
+  cookingTime: number;
+  supplements: string[];
+  budgetTier: BudgetTier;
+  calorieTarget: number | null;
+
+  // set by the backend — pending confirmation from Ankush
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface WorkoutExercise {
