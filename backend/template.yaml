@@ -166,6 +166,29 @@ Resources:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Path: /onboard, Method: POST }
 
+  ProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-profile
+      CodeUri: functions/profile/
+      Handler: handler.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MainTable
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /profile
+            Method: GET
+        Patch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /profile
+            Method: PATCH
+
   GetPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
