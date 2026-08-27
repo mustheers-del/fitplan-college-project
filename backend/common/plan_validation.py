@@ -247,6 +247,26 @@ def check_vegetarian(
     return failures
 
 
+def check_calories(
+    plan: WeeklyPlan,
+    profile: UserProfile,
+) -> list[str]:
+    failures: list[str] = []
+
+    if profile.calorie_target is None:
+        return failures
+
+    for day in plan.meal_plan:
+        difference = abs(day.total_calories - profile.calorie_target)
+
+        if difference > 100:
+            failures.append(
+                f"day {day.day}: {day.total_calories} kcal vs target "
+                f"{profile.calorie_target} (must be within +/-100)"
+            )
+
+    return failures
+
 def check_beginner_level(
     plan: WeeklyPlan,
     profile: UserProfile,
@@ -311,4 +331,8 @@ def check_all_rules(
         check_beginner_level(plan, profile)
     )
 
+
+    failures.extend(
+        check_calories(plan, profile)
+    )
     return failures

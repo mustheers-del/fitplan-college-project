@@ -72,12 +72,13 @@ def generate_plan_for_user(
     user_prompt = build_plan_user_prompt(profile, week_start, previous_plan, adherence)
 
     try:
-        plan, result, source = ai.invoke_structured(
+                plan, result, source = ai.invoke_structured(
             system=PLAN_SYSTEM_PROMPT,
             user_content=user_prompt,
             model_cls=WeeklyPlan,
             max_tokens=4000,
             temperature=0.4,
+            profile=profile,
         )
         prompt_tokens, completion_tokens = result.prompt_tokens, result.completion_tokens
     except Exception:

@@ -14,6 +14,8 @@ import re
 from typing import Any, Type, TypeVar
 
 from pydantic import BaseModel, ValidationError
+from common.models import UserProfile
+from common.plan_validation import check_all_rules
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +141,7 @@ def invoke_structured(
     model_cls: Type[T],
     max_tokens: int = 8000,
     temperature: float = 0.4,
+    profile: UserProfile | None = None,
 ) -> tuple[T, Any, str]:
     """
     Call the selected AI provider and validate the response.
@@ -180,6 +183,15 @@ def invoke_structured(
 
         model = model_cls.model_validate(parsed)
 
+        if profile is not None:
+            rule_failures = check_all_rules(model, profile)
+
+            if rule_failures:
+                raise ValueError(
+                    "Business-rule validation failed:\n- "
+                    + "\n- ".join(rule_failures)
+                )
+
         return model, first, "llm"
 
     except (ValidationError, ValueError, json.JSONDecodeError) as exc:
@@ -204,35 +216,48 @@ Generate the ENTIRE weekly plan again from scratch.
 
 STRICT REQUIREMENTS:
 
-1. Return exactly ONE JSON object.
-2. Return ONLY JSON.
-3. Do NOT use markdown.
-4. Do NOT use ```json fences.
-5. Do NOT add any explanation before or after the JSON.
-6. Follow the supplied Pydantic schema exactly.
-7. Do not rename fields.
-8. Do not add fields that are not in the schema.
-9. workoutPlan must contain exactly 7 days numbered 1 through 7.
-10. mealPlan must contain exactly 7 days numbered 1 through 7.
-11. Training-day count must equal daysPerWeek.
-12. Rest days must have:
-    "isRestDay": true
-    and
-    "exercises": []
-13. "slot" must be exactly one of:
-    "breakfast", "lunch", "dinner", "snack"
-14. Respect injuries.
-15. Respect equipment.
-16. Respect vegetarian/non-vegetarian preference.
-17. Respect allergies.
-18. Respect mealsPerDay.
-19. Respect cookingTime.
-20. Keep each day's meal calories within the required target.
-21. Make sure the JSON is COMPLETE and ends with the final closing brace.
-22. Never stop halfway through the mealPlan.
-23. Before returning the answer, mentally verify that every opening
-    object/array has its corresponding closing brace/bracket.
+1. Return exactly ONE complete JSON object.
+2. Return ONLY JSON. No markdown, no ```json fences, no explanation.
+3. Follow the supplied Pydantic schema exactly.
+4. Do not rename fields or add fields.
+5. workoutPlan must contain exactly 7 days numbered 1 through 7.
+6. mealPlan must contain exactly 7 days numbered 1 through 7.
+7. Follow the FIXED 7-DAY LAYOUT from the original request exactly.
+8. Training-day count must equal daysPerWeek.
+9. Every rest day must have isRestDay=true and exercises=[].
+10. Every training day must have isRestDay=false and at least one exercise.
 
+11. BEGINNER RULE:
+    If experience_level is beginner, ZERO advanced exercises are allowed.
+    Every exercise must be beginner or clearly accessible intermediate.
+    Do NOT use advanced barbell movements such as barbell back squat,
+    barbell deadlift, barbell bench press, or other technically demanding
+    advanced movements for a beginner.
+
+12. INJURY RULE:
+    If the user has a knee injury, NEVER use squats, lunges, step-ups,
+    jumping, running, or other movements that stress the knee.
+    Use safe alternatives instead.
+
+13. EQUIPMENT RULE:
+    Use ONLY equipment explicitly listed in the user's equipment array.
+    If equipment is ["bodyweight"], use only exercises requiring no equipment.
+    Never assume a bench, chair, wall, stairs, table, weights, bands,
+    machines, or other equipment that was not listed.
+
+14. Respect all other injury restrictions.
+15. Respect vegetarian/vegan meal preferences absolutely.
+16. Respect all listed allergies absolutely.
+17. Number of meals per day must equal mealsPerDay.
+18. Total preparation time for each day must not exceed cookingTime.
+19. Every day's totalCalories MUST be within +/-100 kcal of calorieTarget.
+20. Do not intentionally undershoot or overshoot the calorie target.
+21. Before returning JSON, check EVERY exercise against experience,
+    injury, and equipment restrictions.
+22. Before returning JSON, check EVERY meal against diet and allergy rules.
+23. Before returning JSON, check EVERY day's calories against calorieTarget.
+24. Make sure the JSON is COMPLETE and ends with the final closing brace.
+25. Never stop halfway through workoutPlan or mealPlan.
 ORIGINAL USER REQUEST:
 
 {user_content}
@@ -265,6 +290,15 @@ ORIGINAL USER REQUEST:
         parsed = extract_json(second.text)
 
         model = model_cls.model_validate(parsed)
+
+        if profile is not None:
+            rule_failures = check_all_rules(model, profile)
+
+            if rule_failures:
+                raise ValueError(
+                    "Business-rule validation failed:\n- "
+                    + "\n- ".join(rule_failures)
+                )
 
         return model, second, "llm_retry"
 

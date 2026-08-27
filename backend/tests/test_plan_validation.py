@@ -98,7 +98,7 @@ def make_plan(
             {
                 "day": day,
                 "meals": meals,
-                "totalCalories": 1800,
+                "totalCalories": 2000,
                 "totalProteinG": 90,
             }
         )

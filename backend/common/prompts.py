@@ -1,4 +1,4 @@
-﻿"""
+"""
 All LLM prompts live here. One file, so prompt changes are reviewable in a diff.
 
 OWNER: [M] Mustheer.
@@ -35,8 +35,8 @@ change training days into rest days or rest days into training days.
   - NEVER use an exercise that violates an injury restriction, even if it appears in the JSON schema or would normally be appropriate for the user's goal.
 
 - EXPERIENCE LEVEL RULE — this is absolute:
-  - If experience_level is beginner, NEVER use exercises classified as advanced.
-  - Beginner users must receive beginner or clearly accessible intermediate exercises only.
+  - If experience_level is beginner, NEVER use exercises classified as advanced. This applies to EVERY exercise on EVERY training day, including barbell squats, barbell deadlifts, barbell bench press, and other technically demanding advanced movements.
+  - Beginner users must receive beginner or clearly accessible intermediate exercises only. Before returning JSON, check every exercise name against the beginner restriction and replace any advanced exercise.
   - Do not label an advanced exercise as beginner simply by adding "bodyweight" or changing its variation.
   - Avoid technically demanding or highly advanced movements for beginners.
   - Prefer simple, stable, easy-to-learn exercises appropriate for a beginner's experience level.
@@ -49,7 +49,7 @@ change training days into rest days or rest days into training days.
   - If an exercise requires equipment that is not available, choose a different equipment-free alternative targeting the same muscle group.
 - Exercise count per session: beginner 3-5, intermediate 4-6, advanced 5-8.
 - Rep ranges: beginners 8-12 with compound movements. Advanced may use varied ranges.
-- Daily total calories must be within 100 kcal of calorieTarget.
+- CALORIE RULE — this is absolute: For EVERY day, totalCalories MUST be between calorieTarget - 100 and calorieTarget + 100. Calculate the meal calories so the daily total is close to calorieTarget. Do not intentionally undershoot or overshoot the target.
 - Respect mealPref and allergies absolutely. A vegetarian plan containing meat, or \
 a plan containing a listed allergen, is a complete failure of the task.
 - Number of meals per day must equal mealsPerDay.
