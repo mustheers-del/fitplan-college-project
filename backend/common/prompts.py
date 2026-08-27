@@ -35,8 +35,10 @@ change training days into rest days or rest days into training days.
   - NEVER use an exercise that violates an injury restriction, even if it appears in the JSON schema or would normally be appropriate for the user's goal.
 
 - EXPERIENCE LEVEL RULE — this is absolute:
-  - If experience_level is beginner, NEVER use exercises classified as advanced. This applies to EVERY exercise on EVERY training day, including barbell squats, barbell deadlifts, barbell bench press, and other technically demanding advanced movements.
-  - Beginner users must receive beginner or clearly accessible intermediate exercises only. Before returning JSON, check every exercise name against the beginner restriction and replace any advanced exercise.
+  - If experience_level is beginner, NEVER use exercises classified as advanced.
+  - This applies to EVERY exercise on EVERY training day.
+  - Beginner users must receive beginner or clearly accessible intermediate exercises only.
+  - Before returning JSON, check every exercise name against the beginner restriction and replace any advanced exercise.
   - Do not label an advanced exercise as beginner simply by adding "bodyweight" or changing its variation.
   - Avoid technically demanding or highly advanced movements for beginners.
   - Prefer simple, stable, easy-to-learn exercises appropriate for a beginner's experience level.
@@ -45,21 +47,47 @@ change training days into rest days or rest days into training days.
   - Only use equipment explicitly listed in the user's equipment array.
   - If equipment is ["bodyweight"], use exercises that require NO equipment at all.
   - When equipment is ["bodyweight"], NEVER assume or require a bench, chair, stairs, table, wall, door, resistance band, weights, gym machine, or any other object that is not explicitly listed.
-  - Exercise names must accurately reflect their equipment requirements. Do not use names such as "Tricep Dips (Bench/Chair)" or "Step-ups (Stairs or Bench)" when those objects are not available.
+  - Exercise names must accurately reflect their equipment requirements.
+  - Do not use names such as "Tricep Dips (Bench/Chair)" or "Step-ups (Stairs or Bench)" when those objects are not available.
   - If an exercise requires equipment that is not available, choose a different equipment-free alternative targeting the same muscle group.
-- Exercise count per session: beginner 3-5, intermediate 4-6, advanced 5-8.
-- Rep ranges: beginners 8-12 with compound movements. Advanced may use varied ranges.
-- CALORIE RULE — this is absolute: For EVERY day, totalCalories MUST be between calorieTarget - 100 and calorieTarget + 100. Calculate the meal calories so the daily total is close to calorieTarget. Do not intentionally undershoot or overshoot the target.
-- Respect mealPref and allergies absolutely. A vegetarian plan containing meat, or \
-a plan containing a listed allergen, is a complete failure of the task.
+
+- Exercise count per session:
+  - beginner: 3-5 exercises
+  - intermediate: 4-6 exercises
+  - advanced: 5-8 exercises
+
+- Rep ranges:
+  - beginners: generally 8-12 reps with compound movements
+  - advanced users may use varied rep ranges
+
+- CALORIE RULE — this is absolute:
+  - Every day's totalCalories MUST be within +/-100 kcal of calorieTarget.
+  - Follow the exact per-meal calorie budgets supplied in the user request.
+  - Each meal's calories should closely match its assigned budget.
+  - If a meal seems too small for its calorie budget, increase the portion size rather than reducing the calorie target.
+  - Do not intentionally undershoot or overshoot the daily calorie target.
+  - Before returning JSON, verify every day's meal calories and totalCalories.
+  - The meal calories for each day must add up to that day's totalCalories.
+
+- Respect mealPref and allergies absolutely.
+  - A vegetarian plan containing meat is a complete failure.
+  - A plan containing a listed allergen is a complete failure.
+
 - Number of meals per day must equal mealsPerDay.
+
 - Total prep time across a day's meals must not exceed cookingTime minutes.
-- Use cuisines from the user's cuisine list where possible. Keep ingredients \
-available and affordable for the stated budgetTier.
+
+- Use cuisines from the user's cuisine list where possible.
+
+- Keep ingredients available and affordable for the stated budgetTier.
 
 Write the coachNote as one or two encouraging, specific sentences referencing \
 something concrete about this week's plan. No generic motivation."""
 
+
+# ==========================================================================
+# DETERMINISTIC TRAINING LAYOUT
+# ==========================================================================
 
 def day_layout(days_per_week: int) -> str:
     """
@@ -82,6 +110,38 @@ def day_layout(days_per_week: int) -> str:
     )
 
 
+# ==========================================================================
+# DETERMINISTIC CALORIE BUDGETS
+# ==========================================================================
+
+MEAL_SPLITS = {
+    3: [0.30, 0.40, 0.30],
+    4: [0.25, 0.35, 0.30, 0.10],
+    5: [0.22, 0.30, 0.28, 0.10, 0.10],
+    6: [0.20, 0.25, 0.25, 0.10, 0.10, 0.10],
+}
+
+
+def meal_budgets(target: int, meals_per_day: int) -> list[int]:
+    """
+    Return deterministic per-meal calorie budgets that sum exactly to target.
+    """
+
+    split = MEAL_SPLITS[meals_per_day]
+
+    budgets = [round(target * portion) for portion in split]
+
+    # Absorb rounding differences into the final meal so the total
+    # is exactly equal to the daily calorie target.
+    budgets[-1] += target - sum(budgets)
+
+    return budgets
+
+
+# ==========================================================================
+# PLAN USER PROMPT
+# ==========================================================================
+
 def build_plan_user_prompt(
     profile: UserProfile,
     week_start: str,
@@ -91,10 +151,28 @@ def build_plan_user_prompt(
     """
     Compact user turn.
 
-    Pretty-printing JSON into a prompt burns input tokens for no benefit.
+    Deterministic training-day layout and calorie budgets are calculated
+    in Python and explicitly supplied to the model.
     """
 
     schema = WeeklyPlan.model_json_schema()
+
+    target = profile.calorie_target or 2000
+    budgets = meal_budgets(target, profile.meals_per_day)
+
+    meal_names = [
+        "breakfast",
+        "lunch",
+        "dinner",
+        "snack",
+        "snack",
+        "snack",
+    ]
+
+    calorie_budget_lines = "\n".join(
+        f"  Meal {i + 1} ({meal_names[i]}): {budget} kcal"
+        for i, budget in enumerate(budgets)
+    )
 
     parts = [
         "Generate a weekly plan for this user.",
@@ -113,6 +191,17 @@ def build_plan_user_prompt(
         "Follow this layout exactly. Do not change which days are training or rest days.",
         "Every REST DAY must have isRestDay=true and an empty exercises array.",
         "Every TRAINING DAY must have isRestDay=false and contain exercises.",
+        "",
+        "DAILY CALORIE BUDGET:",
+        f"Daily calorie target: {target} kcal.",
+        "Every day MUST total within +/-100 kcal of this target.",
+        "Use these exact per-meal calorie budgets on EVERY day:",
+        calorie_budget_lines,
+        "Each meal's calories should closely match its assigned budget.",
+        "If a meal seems too small for its budget, increase the portion size.",
+        "Do NOT reduce the calorie target or intentionally undershoot it.",
+        "State realistic portion sizes that support the assigned calorie amount.",
+        "Before returning JSON, verify that every day's meal calories add up correctly.",
     ]
 
     if previous_plan and adherence:
@@ -160,6 +249,10 @@ def build_plan_user_prompt(
 
     return "\n".join(parts)
 
+
+# ==========================================================================
+# ADAPTATION RULES
+# ==========================================================================
 
 ADAPTATION_RULES = """ADAPTATION RULES based on last week's adherence:
 - Completed all sessions and reported them as easy: increase load ~2.5-5% on \
@@ -211,3 +304,4 @@ def build_parse_user_prompt(
             json.dumps(schema, separators=(",", ":")),
         ]
     )
+
