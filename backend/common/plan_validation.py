@@ -81,13 +81,11 @@ ADVANCED_BAR = {
     "back squat",
     "front squat",
     "barbell deadlift",
-    "deadlift",
     "barbell bench press",
     "barbell row",
     "clean and jerk",
     "snatch",
 }
-
 
 # ---------------------------------------------------------------------------
 # Individual checks

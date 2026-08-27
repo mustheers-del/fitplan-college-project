@@ -201,3 +201,17 @@ def test_beginner_profile_rejects_advanced_barbell_exercise():
     failures = check_all_rules(plan, profile)
 
     assert any("advanced exercise" in failure.lower() for failure in failures)
+
+def test_beginner_bodyweight_romanian_deadlift_is_not_flagged_as_barbell():
+    profile = make_profile(experience="beginner")
+    plan = make_plan(
+        profile,
+        exercise_names=["Romanian Deadlifts (Bodyweight)"],
+    )
+
+    failures = check_all_rules(plan, profile)
+
+    assert not any(
+        "advanced exercise" in failure.lower()
+        for failure in failures
+    )
