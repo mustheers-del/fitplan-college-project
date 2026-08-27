@@ -204,235 +204,10 @@ PROFILES = [
 
 
 # ---------------------------------------------------------------------------
-# Rule dictionaries
+# Business-rule validation
 # ---------------------------------------------------------------------------
 
-MEAT = {
-    "chicken",
-    "beef",
-    "pork",
-    "fish",
-    "salmon",
-    "tuna",
-    "turkey",
-    "bacon",
-    "ham",
-    "lamb",
-    "shrimp",
-    "prawn",
-    "mutton",
-}
-
-KNEE = {
-    "squat",
-    "squats",
-    "lunge",
-    "lunges",
-    "leg press",
-    "leg extension",
-    "step-up",
-    "step up",
-    "jump",
-    "jumping",
-}
-
-ADVANCED_BAR = {
-    "barbell squat",
-    "back squat",
-    "front squat",
-    "barbell deadlift",
-    "deadlift",
-    "barbell bench press",
-    "barbell row",
-    "clean and jerk",
-    "snatch",
-}
-
-
-# ---------------------------------------------------------------------------
-# Checks
-# ---------------------------------------------------------------------------
-
-def check_weekly_structure(
-    plan: WeeklyPlan,
-    profile: UserProfile,
-) -> list[str]:
-    failures: list[str] = []
-
-    if len(plan.workout_plan) != 7:
-        failures.append(
-            f"workoutPlan has {len(plan.workout_plan)} days instead of 7"
-        )
-
-    if len(plan.meal_plan) != 7:
-        failures.append(
-            f"mealPlan has {len(plan.meal_plan)} days instead of 7"
-        )
-
-    training_days = [
-        day for day in plan.workout_plan
-        if not day.is_rest_day
-    ]
-
-    rest_days = [
-        day for day in plan.workout_plan
-        if day.is_rest_day
-    ]
-
-    if len(training_days) != profile.days_per_week:
-        failures.append(
-            f"expected {profile.days_per_week} training days, "
-            f"got {len(training_days)}"
-        )
-
-    expected_rest = 7 - profile.days_per_week
-
-    if len(rest_days) != expected_rest:
-        failures.append(
-            f"expected {expected_rest} rest days, "
-            f"got {len(rest_days)}"
-        )
-
-    for day in rest_days:
-        if day.exercises:
-            failures.append(
-                f"day {day.day} is marked rest but has exercises"
-            )
-
-    return failures
-
-
-def check_vegetarian(plan: WeeklyPlan) -> list[str]:
-    failures: list[str] = []
-
-    for day in plan.meal_plan:
-        for meal in day.meals:
-            blob = (
-                f"{meal.name} "
-                f"{' '.join(meal.ingredients)}"
-            ).lower()
-
-            for meat in MEAT:
-                if meat in blob:
-                    failures.append(
-                        f"day {day.day}/{meal.name}: contains '{meat}'"
-                    )
-
-    return failures
-
-
-def check_knee_safety(plan: WeeklyPlan) -> list[str]:
-    failures: list[str] = []
-
-    for day in plan.workout_plan:
-        for exercise in day.exercises:
-            name = exercise.name.lower()
-
-            for forbidden in KNEE:
-                if forbidden in name:
-                    failures.append(
-                        f"day {day.day}: '{exercise.name}'"
-                    )
-
-    return failures
-
-
-def check_beginner_level(plan: WeeklyPlan) -> list[str]:
-    failures: list[str] = []
-
-    for day in plan.workout_plan:
-        for exercise in day.exercises:
-            name = exercise.name.lower()
-
-            for forbidden in ADVANCED_BAR:
-                if forbidden in name:
-                    failures.append(
-                        f"day {day.day}: advanced exercise '{exercise.name}'"
-                    )
-
-    return failures
-
-
-def check_meals_per_day(
-    plan: WeeklyPlan,
-    profile: UserProfile,
-) -> list[str]:
-    failures: list[str] = []
-
-    for day in plan.meal_plan:
-        if len(day.meals) != profile.meals_per_day:
-            failures.append(
-                f"meal day {day.day}: expected "
-                f"{profile.meals_per_day} meals, got {len(day.meals)}"
-            )
-
-    return failures
-
-
-def check_equipment(
-    plan: WeeklyPlan,
-    profile: UserProfile,
-) -> list[str]:
-    """
-    Lightweight equipment check.
-
-    We only flag obvious equipment names. This is intentionally conservative
-    so the harness does not produce false positives from exercise names.
-    """
-
-    failures: list[str] = []
-
-    equipment = {
-        item.lower().replace("-", " ")
-        for item in profile.equipment
-    }
-
-    if "bodyweight" in equipment and len(equipment) == 1:
-        forbidden_equipment_terms = {
-            "barbell",
-            "dumbbell",
-            "cable",
-            "machine",
-            "bench",
-            "kettlebell",
-        }
-
-        for day in plan.workout_plan:
-            for exercise in day.exercises:
-                name = exercise.name.lower()
-
-                for term in forbidden_equipment_terms:
-                    if term in name:
-                        failures.append(
-                            f"day {day.day}: '{exercise.name}' "
-                            f"appears to require {term}"
-                        )
-
-    return failures
-
-
-def check_all_rules(
-    plan: WeeklyPlan,
-    profile: UserProfile,
-) -> list[str]:
-    failures = []
-
-    failures.extend(check_weekly_structure(plan, profile))
-    failures.extend(check_meals_per_day(plan, profile))
-    failures.extend(check_equipment(plan, profile))
-
-    if profile.meal_pref == "vegetarian":
-        failures.extend(check_vegetarian(plan))
-
-    if any("knee" in injury.lower() for injury in profile.injuries):
-        failures.extend(check_knee_safety(plan))
-
-    if profile.experience == "beginner":
-        failures.extend(check_beginner_level(plan))
-
-    return failures
-
-
+from common.plan_validation import check_all_rules
 # ---------------------------------------------------------------------------
 # Generation
 # ---------------------------------------------------------------------------
@@ -580,7 +355,7 @@ def make_report(results: list[dict[str, Any]]) -> str:
 
         if not failures:
             lines.append(
-                f"### `{result['profile'].name}` — PASS"
+                f"### `{result['profile'].name}` â€” PASS"
             )
             lines.append("")
             lines.append("No automated rule failures.")
@@ -589,7 +364,7 @@ def make_report(results: list[dict[str, Any]]) -> str:
             any_failures = True
 
             lines.append(
-                f"### `{result['profile'].name}` — FAIL"
+                f"### `{result['profile'].name}` â€” FAIL"
             )
             lines.append("")
 
@@ -600,12 +375,12 @@ def make_report(results: list[dict[str, Any]]) -> str:
 
     if not any_failures:
         lines.append(
-            "**Overall result: PASS — all five profiles passed "
+            "**Overall result: PASS â€” all five profiles passed "
             "the automated checks.**"
         )
     else:
         lines.append(
-            "**Overall result: FAIL — at least one profile needs "
+            "**Overall result: FAIL â€” at least one profile needs "
             "prompt/model improvement.**"
         )
 
@@ -697,3 +472,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
