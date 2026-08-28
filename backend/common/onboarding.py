@@ -7,9 +7,6 @@ activity multiplier + goal adjustment) so the LLM gets a number instead of null.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
-
 from common import dynamo
 from common.models import UserProfile
 
@@ -41,22 +38,16 @@ def estimate_calorie_target(profile: UserProfile) -> int:
     return max(1200, min(target, 5000))  # never prescribe a dangerous deficit
 
 
-def create_or_update_profile(user_id: str, profile: UserProfile) -> UserProfile:
+def create_or_update_profile(user_id: str, profile: UserProfile) -> tuple[UserProfile, bool]:
     if profile.calorie_target is None:
         profile.calorie_target = estimate_calorie_target(profile)
 
     data = profile.model_dump(by_alias=True, mode="json")
-    existing = dynamo.get_item(user_id, dynamo.SK_PROFILE)
-    now = datetime.now(timezone.utc).isoformat()
-
-    data["createdAt"] = existing.get("createdAt", now) if existing else now
-    data["updatedAt"] = now
-
-    dynamo.put_item(user_id, dynamo.SK_PROFILE, data)
-    return profile
+    _, created = dynamo.update_item(user_id, dynamo.SK_PROFILE, data)
+    return profile, created
 
 
-def get_profile(user_id: str) -> Optional[UserProfile]:
+def get_profile(user_id: str) -> UserProfile | None:
     item = dynamo.get_item(user_id, dynamo.SK_PROFILE)
     if not item:
         return None

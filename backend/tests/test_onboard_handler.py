@@ -39,15 +39,23 @@ def _event(body, sub="user-123"):
 
 
 def _valid_body():
-    return json.dumps({
-        "age": 25, "sex": "male", "heightCm": 175, "weightKg": 70,
-        "goal": "build_muscle", "activityLevel": "moderate",
-        "experience": "beginner", "daysPerWeek": 4,
-    })
+    return json.dumps(
+        {
+            "age": 25,
+            "sex": "male",
+            "heightCm": 175,
+            "weightKg": 70,
+            "goal": "build_muscle",
+            "activityLevel": "moderate",
+            "experience": "beginner",
+            "daysPerWeek": 4,
+        }
+    )
 
 
 def _handler():
     from functions.onboard.handler import lambda_handler
+
     return lambda_handler
 
 
@@ -69,13 +77,21 @@ def test_malformed_json_returns_400(dynamo_setup):
 
 
 def test_invalid_profile_returns_400_with_detail(dynamo_setup):
-    bad = json.dumps({"age": 5, "sex": "male", "heightCm": 175, "weightKg": 70,
-                      "goal": "build_muscle", "activityLevel": "moderate",
-                      "experience": "beginner", "daysPerWeek": 4})  # age 5 < 13
+    bad = json.dumps(
+        {
+            "age": 5,
+            "sex": "male",
+            "heightCm": 175,
+            "weightKg": 70,
+            "goal": "build_muscle",
+            "activityLevel": "moderate",
+            "experience": "beginner",
+            "daysPerWeek": 4,
+        }
+    )  # age 5 < 13
     resp = _handler()(_event(bad), None)
     assert resp["statusCode"] == 400
     assert "detail" in json.loads(resp["body"])
-
 
 
 def test_unknown_field_rejected(dynamo_setup):
@@ -86,3 +102,8 @@ def test_unknown_field_rejected(dynamo_setup):
     assert resp["statusCode"] == 400
 
 
+def test_second_onboard_returns_200(dynamo_setup):
+    handler = _handler()
+    handler(_event(_valid_body()), None)  # first → 201
+    resp = handler(_event(_valid_body()), None)  # second → 200
+    assert resp["statusCode"] == 200
