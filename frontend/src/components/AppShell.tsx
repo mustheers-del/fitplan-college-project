@@ -1,6 +1,8 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
+
+const AppShellContext = createContext(false);
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard" },
@@ -20,13 +22,33 @@ interface AppShellProps {
   userName?: string;
 }
 
-export function AppShell({
+export function AppShell({ children, active, userName }: AppShellProps) {
+  const alreadyInsideShell = useContext(AppShellContext);
+
+  if (alreadyInsideShell) {
+    return <>{children}</>;
+  }
+
+  return (
+    <AppShellContext.Provider value={true}>
+      <AppShellLayout active={active} userName={userName}>
+        {children}
+      </AppShellLayout>
+    </AppShellContext.Provider>
+  );
+}
+
+function AppShellLayout({
   children,
   active,
   userName,
 }: AppShellProps) {
+  const location = useLocation();
   const navigate = useNavigate();
   const { email, signOut } = useAuth();
+
+  const currentPath = active || location.pathname;
+  const displayName = userName || email || "FitPlan User";
 
   async function handleLogout() {
     await signOut();
@@ -38,101 +60,101 @@ export function AppShell({
       style={{
         minHeight: "100vh",
         display: "flex",
-        background: "var(--c-bg, #f7f8fa)",
+        background: "var(--c-bg, #f8fafc)",
+        color: "var(--c-text, #111827)",
       }}
     >
       <aside
         style={{
-          width: "250px",
-          flexShrink: 0,
+          width: "240px",
           minHeight: "100vh",
-          background: "#111827",
-          color: "#fff",
           padding: "24px 16px",
+          borderRight: "1px solid var(--c-border, #e5e7eb)",
+          background: "var(--c-surface, #ffffff)",
           boxSizing: "border-box",
-          position: "sticky",
-          top: 0,
-          alignSelf: "flex-start",
+          flexShrink: 0,
         }}
       >
         <div
           style={{
             fontSize: "22px",
             fontWeight: 700,
-            padding: "0 12px 28px",
+            marginBottom: "28px",
+            padding: "0 12px",
           }}
         >
           FitPlan
         </div>
 
         <nav style={{ display: "grid", gap: "6px" }}>
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              style={({ isActive }) => ({
-                display: "block",
-                padding: "11px 12px",
-                borderRadius: "8px",
-                color: "#fff",
-                textDecoration: "none",
-                background:
-                  isActive || active === item.href
-                    ? "rgba(255,255,255,0.14)"
+          {NAV_ITEMS.map((item) => {
+            const isActive = currentPath === item.href;
+
+            return (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => navigate(item.href)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "11px 12px",
+                  border: "none",
+                  borderRadius: "8px",
+                  background: isActive
+                    ? "var(--c-primary, #2563eb)"
                     : "transparent",
-                fontWeight:
-                  isActive || active === item.href ? 600 : 400,
-              })}
-            >
-              {item.label}
-            </NavLink>
-          ))}
+                  color: isActive
+                    ? "#ffffff"
+                    : "var(--c-text, #111827)",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: isActive ? 600 : 500,
+                }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
 
-        <button
-          type="button"
-          onClick={handleLogout}
-          style={{
-            width: "100%",
-            marginTop: "24px",
-            padding: "11px 12px",
-            border: "1px solid rgba(255,255,255,0.18)",
-            borderRadius: "8px",
-            background: "transparent",
-            color: "#fff",
-            cursor: "pointer",
-            textAlign: "left",
-          }}
-        >
-          Logout
-        </button>
-
         <div
           style={{
-            marginTop: "20px",
-            padding: "0 12px",
-            color: "rgba(255,255,255,0.65)",
-            fontSize: "13px",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            marginTop: "auto",
+            paddingTop: "28px",
+            paddingLeft: "12px",
+            paddingRight: "12px",
           }}
         >
-          {userName || email || "FitPlan User"}
-        </div>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "var(--c-text-secondary, #6b7280)",
+              marginBottom: "12px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {displayName}
+          </div>
 
-        <div
-          style={{
-            margin: "14px 12px 0",
-            width: "36px",
-            height: "36px",
-            borderRadius: "50%",
-            background: "#374151",
-            display: "grid",
-            placeItems: "center",
-            fontWeight: 700,
-          }}
-        >
-          {(userName || email || "U").charAt(0).toUpperCase()}
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid var(--c-border, #e5e7eb)",
+              borderRadius: "8px",
+              background: "transparent",
+              color: "var(--c-text, #111827)",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Logout
+          </button>
         </div>
       </aside>
 
