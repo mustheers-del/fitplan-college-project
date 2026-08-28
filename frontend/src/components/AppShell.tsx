@@ -1,8 +1,7 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "@/auth/AuthContext";
 
-/** Sidebar navigation. Order matches the client mockup — don't reorder. */
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Workout", href: "/workout" },
@@ -17,14 +16,13 @@ const NAV_ITEMS = [
 
 interface AppShellProps {
   children?: ReactNode;
-  /** href of the current page, used to highlight the sidebar link. */
   active?: string;
-  /** Optional display name. Falls back to Cognito email. */
   userName?: string;
 }
 
 export function AppShell({ children, active, userName }: AppShellProps) {
-  const { email } = useAuth();
+  const { email, signOut } = useAuth();
+  const navigate = useNavigate();
 
   const displayName = userName ?? email ?? "Not signed in";
 
@@ -38,6 +36,15 @@ export function AppShell({ children, active, userName }: AppShellProps) {
           .join("")
           .toUpperCase()
       : "?";
+
+  async function handleLogout() {
+    try {
+      await signOut();
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -76,6 +83,24 @@ export function AppShell({ children, active, userName }: AppShellProps) {
             </a>
           ))}
         </nav>
+
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{
+            width: "100%",
+            marginTop: "var(--sp-6)",
+            padding: "var(--sp-3)",
+            border: "1px solid var(--c-border)",
+            borderRadius: "var(--r-md)",
+            background: "transparent",
+            color: "var(--c-text)",
+            cursor: "pointer",
+            fontWeight: "var(--fw-semibold)",
+          }}
+        >
+          Logout
+        </button>
       </aside>
 
       <div className="fp-main">

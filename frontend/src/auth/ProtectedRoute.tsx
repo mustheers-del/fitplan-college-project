@@ -3,10 +3,6 @@ import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { api, ApiRequestError } from "../api/client";
 
-/**
- * Protects authenticated routes and sends users who have not
- * completed onboarding to /onboarding.
- */
 export default function ProtectedRoute() {
   const { userId, loading: authLoading } = useAuth();
   const location = useLocation();
@@ -19,14 +15,18 @@ export default function ProtectedRoute() {
 
     async function checkProfile() {
       if (!userId) {
-        setProfileChecked(true);
-        setHasProfile(false);
+        if (!cancelled) {
+          setHasProfile(false);
+          setProfileChecked(true);
+        }
         return;
       }
 
-      // We are already on onboarding, so don't need to redirect there.
       if (location.pathname === "/onboarding") {
-        setProfileChecked(true);
+        if (!cancelled) {
+          setHasProfile(true);
+          setProfileChecked(true);
+        }
         return;
       }
 
@@ -35,20 +35,19 @@ export default function ProtectedRoute() {
 
         if (!cancelled) {
           setHasProfile(true);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          if (err instanceof ApiRequestError && err.status === 404) {
-            setHasProfile(false);
-          } else {
-            console.error("Failed to check profile:", err);
-            setHasProfile(false);
-          }
-        }
-      } finally {
-        if (!cancelled) {
           setProfileChecked(true);
         }
+      } catch (err) {
+        if (cancelled) return;
+
+        if (err instanceof ApiRequestError && err.status === 404) {
+          setHasProfile(false);
+        } else {
+          console.error("Failed to check profile:", err);
+          setHasProfile(true);
+        }
+
+        setProfileChecked(true);
       }
     }
 
@@ -61,7 +60,7 @@ export default function ProtectedRoute() {
   }, [userId, location.pathname]);
 
   if (authLoading || !profileChecked) {
-    return <div style={{ padding: 40 }}>Loading…</div>;
+    return <div style={{ padding: 40 }}>Loading...</div>;
   }
 
   if (!userId) {
