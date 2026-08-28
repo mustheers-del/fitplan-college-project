@@ -61,7 +61,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <AppShell active="/profile" userName="Test User">
+      <AppShell active="/profile">
         <PageHeader
           title="Profile"
           subtitle="View and update your fitness preferences"
@@ -75,7 +75,7 @@ export default function Profile() {
 
   if (!profile) {
     return (
-      <AppShell active="/profile" userName="Test User">
+      <AppShell active="/profile">
         <PageHeader title="Profile" />
         <Card>
           <p style={{ color: "var(--c-danger)" }}>
@@ -87,7 +87,7 @@ export default function Profile() {
   }
 
   return (
-    <AppShell active="/profile" userName="Test User">
+    <AppShell active="/profile">
       <PageHeader
         title="Profile"
         subtitle="View and update your fitness preferences"
@@ -251,3 +251,4 @@ export default function Profile() {
     </AppShell>
   );
 }
+

@@ -80,7 +80,7 @@ export default function Achievements() {
 
   if (isLoading) {
     return (
-      <AppShell active="/achievements" userName="Test User">
+      <AppShell active="/achievements">
         <PageHeader
           title="Achievements"
           subtitle="Milestones from your fitness journey"
@@ -94,7 +94,7 @@ export default function Achievements() {
 
   if (error) {
     return (
-      <AppShell active="/achievements" userName="Test User">
+      <AppShell active="/achievements">
         <PageHeader title="Achievements" />
         <Card>
           <EmptyState
@@ -107,7 +107,7 @@ export default function Achievements() {
   }
 
   return (
-    <AppShell active="/achievements" userName="Test User">
+    <AppShell active="/achievements">
       <PageHeader
         title="Achievements"
         subtitle="Milestones from your fitness journey"
@@ -201,3 +201,4 @@ export default function Achievements() {
     </AppShell>
   );
 }
+

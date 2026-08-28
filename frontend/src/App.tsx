@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import AppShell from "./components/AppShell";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 import Login from "./pages/Login";
@@ -26,15 +27,18 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/onboarding" element={<Onboarding />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/workout" element={<WorkoutDetails />} />
-        <Route path="/meals" element={<MealPlan />} />
-        <Route path="/logs" element={<DailyLogs />} />
-        <Route path="/progress" element={<Progress />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/achievements" element={<Achievements />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/settings" element={<Settings />} />
+
+        <Route element={<AppShell />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/workout" element={<WorkoutDetails />} />
+          <Route path="/meals" element={<MealPlan />} />
+          <Route path="/logs" element={<DailyLogs />} />
+          <Route path="/progress" element={<Progress />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/achievements" element={<Achievements />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
