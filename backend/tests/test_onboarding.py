@@ -32,9 +32,14 @@ def _profile(**overrides):
     from common.models import UserProfile
 
     base = dict(
-        age=25, sex="male", heightCm=175, weightKg=70,
-        goal="build_muscle", activityLevel="moderate",
-        experience="beginner", daysPerWeek=4,
+        age=25,
+        sex="male",
+        heightCm=175,
+        weightKg=70,
+        goal="build_muscle",
+        activityLevel="moderate",
+        experience="beginner",
+        daysPerWeek=4,
     )
     base.update(overrides)
     return UserProfile.model_validate(base)
@@ -43,7 +48,7 @@ def _profile(**overrides):
 def test_estimate_fills_calorie_target_when_null(dynamo_setup):
     from common import onboarding
 
-    saved = onboarding.create_or_update_profile("u1", _profile())
+    saved, _ = onboarding.create_or_update_profile("u1", _profile())
     assert saved.calorie_target is not None
     assert 1200 <= saved.calorie_target <= 5000
 
@@ -51,7 +56,7 @@ def test_estimate_fills_calorie_target_when_null(dynamo_setup):
 def test_user_supplied_calorie_target_is_kept(dynamo_setup):
     from common import onboarding
 
-    saved = onboarding.create_or_update_profile("u1", _profile(calorieTarget=2800))
+    saved, _ = onboarding.create_or_update_profile("u1", _profile(calorieTarget=2800))
     assert saved.calorie_target == 2800
 
 
@@ -88,5 +93,15 @@ def test_get_profile_roundtrips(dynamo_setup):
 def test_female_bmr_branch(dynamo_setup):
     from common import onboarding
 
-    saved = onboarding.create_or_update_profile("u1", _profile(sex="female"))
+    saved, _ = onboarding.create_or_update_profile("u1", _profile(sex="female"))
     assert 1200 <= saved.calorie_target <= 5000
+
+
+def test_created_flag_true_on_first_false_on_second(dynamo_setup):
+    from common import onboarding
+
+    _, created_first = onboarding.create_or_update_profile("u1", _profile())
+    _, created_second = onboarding.create_or_update_profile("u1", _profile(weightKg=72))
+
+    assert created_first is True
+    assert created_second is False

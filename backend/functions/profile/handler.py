@@ -45,8 +45,7 @@ def lambda_handler(event, context):
         except ValidationError as e:
             return auth.error("profile validation failed", 400, e.errors())
 
-        saved = onboarding.create_or_update_profile(user_id, profile)
-
+        saved, _ = onboarding.create_or_update_profile(user_id, profile)
         return auth.ok({
             "profile": saved.model_dump(by_alias=True, mode="json")
         })
