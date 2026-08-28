@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api } from "@/api/client";
+import { api, ApiRequestError } from "@/api/client";
 import Card from "@/components/Card";
 import type { WeeklyPlan } from "@/types/api";
 
@@ -13,13 +13,22 @@ export default function Dashboard() {
     try {
       setLoading(true);
       setError(null);
+
       const response = await api.getPlan();
       setPlan(response.plan);
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Unable to load your plan.",
-      );
+
+      // A 404 means the user does not have a plan yet.
+      // This is not a real error, so show the Generate My Plan button.
+      if (err instanceof ApiRequestError && err.status === 404) {
+        setPlan(null);
+        setError(null);
+      } else {
+        setError(
+          err instanceof Error ? err.message : "Unable to load your plan.",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -37,6 +46,8 @@ export default function Dashboard() {
       const response = await api.generatePlan({ force: true });
       setPlan(response.plan);
     } catch (err) {
+      console.error(err);
+
       setError(
         err instanceof Error
           ? err.message
@@ -51,7 +62,7 @@ export default function Dashboard() {
     return (
       <div style={{ display: "grid", gap: "24px" }}>
         <div>
-          <h1 style={{ margin: 0 }}>Good morning ??</h1>
+          <h1 style={{ margin: 0 }}>Good morning</h1>
           <p style={{ color: "var(--c-text-secondary)" }}>
             Loading your personalised fitness plan...
           </p>
@@ -83,7 +94,7 @@ export default function Dashboard() {
             fontWeight: 700,
           }}
         >
-          Good morning ??
+          Good morning
         </h1>
 
         <p
@@ -272,8 +283,7 @@ export default function Dashboard() {
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns:
-                        "repeat(3, minmax(0, 1fr))",
+                      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
                       gap: "12px",
                     }}
                   >
@@ -342,6 +352,7 @@ export default function Dashboard() {
       {!plan && !error && (
         <Card title="No plan available">
           <p>Your personalised plan has not been generated yet.</p>
+
           <button
             onClick={handleGenerate}
             disabled={generating}
@@ -352,6 +363,8 @@ export default function Dashboard() {
               background: "var(--c-primary)",
               color: "#fff",
               fontWeight: 600,
+              cursor: generating ? "not-allowed" : "pointer",
+              opacity: generating ? 0.7 : 1,
             }}
           >
             {generating ? "Generating..." : "Generate My Plan"}

@@ -64,6 +64,8 @@ export default function Onboarding() {
           | "pescatarian",
       });
 
+      await api.generatePlan();
+
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
