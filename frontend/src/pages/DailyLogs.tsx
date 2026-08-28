@@ -1,147 +1,68 @@
 import { useEffect, useState } from "react";
-import { Card, PageHeader, LoadingSkeleton, EmptyState, Button } from "../components";
+import { Card, PageHeader, LoadingSkeleton, EmptyState } from "../components";
 import { api } from "../api/client";
 import type { DailyLog } from "../types/api";
 
 export default function DailyLogs() {
-  const [logs, setLogs] = useState<DailyLog[]>([]);
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [workoutText, setWorkoutText] = useState("");
-  const [mealsText, setMealsText] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
+  const [logs,setLogs]=useState<DailyLog[]>([]);
+  const [date,setDate]=useState(new Date().toISOString().slice(0,10));
+  const [workout,setWorkout]=useState("");
+  const [meals,setMeals]=useState("");
+  const [saving,setSaving]=useState(false);
+  const [loading,setLoading]=useState(true);
+  const [message,setMessage]=useState("");
 
-  async function loadLogs() {
-    try {
-      const response = await api.getLogs("30d");
-      setLogs(response.logs ?? []);
-    } finally {
-      setLoading(false);
-    }
+  async function load(){ try { const r=await api.getLogs("30d"); setLogs(r.logs??[]); } finally {setLoading(false);} }
+  useEffect(()=>{void load()},[]);
+
+  async function save(){
+    try{
+      setSaving(true); setMessage("");
+      await api.logDaily({date,workoutText:workout,mealsText:meals});
+      setMessage("Check-in saved successfully.");
+      await load();
+      setWorkout(""); setMeals("");
+    }catch(e){setMessage(e instanceof Error ? e.message : "Could not save check-in.");}
+    finally{setSaving(false);}
   }
 
-  useEffect(() => {
-    void loadLogs();
-  }, []);
+  if(loading) return <><PageHeader title="Daily Check-in" subtitle="Track your daily fitness activity"/><Card><LoadingSkeleton lines={8}/></Card></>;
 
-  async function handleSave() {
-    try {
-      setSaving(true);
-      setMessage("");
+  return <>
+    <PageHeader title="Daily Check-in" subtitle="Track your daily fitness activity"/>
 
-      await api.logDaily({
-        date,
-        workoutText,
-        mealsText,
-      });
+    <Card title="Today's Activity">
+      <label>Date</label>
+      <input type="date" value={date} onChange={e=>setDate(e.target.value)}
+        style={{display:"block",width:"100%",padding:"12px",margin:"8px 0 20px"}}/>
 
-      setMessage("Daily check-in saved successfully.");
-      await loadLogs();
-    } catch (err) {
-      setMessage(
-        err instanceof Error ? err.message : "Could not save check-in.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
+      <label>Workout</label>
+      <textarea value={workout} onChange={e=>setWorkout(e.target.value)}
+        placeholder="What workout did you complete today?"
+        rows={4} style={{display:"block",width:"100%",padding:"12px",margin:"8px 0 20px"}}/>
 
-  if (loading) {
-    return (
-      <>
-        <PageHeader title="Daily Check-in" />
-        <Card><LoadingSkeleton lines={6} /></Card>
-      </>
-    );
-  }
+      <label>Meals</label>
+      <textarea value={meals} onChange={e=>setMeals(e.target.value)}
+        placeholder="What did you eat today?"
+        rows={4} style={{display:"block",width:"100%",padding:"12px",margin:"8px 0 20px"}}/>
 
-  return (
-    <>
-      <PageHeader
-        title="Daily Check-in"
-        subtitle="Record your workout and meals"
-      />
+      {message && <p>{message}</p>}
 
-      <Card title="Today's Check-in">
-        <label>
-          Date
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            style={{ display: "block", width: "100%", marginTop: "var(--space-2)" }}
-          />
-        </label>
+      <button onClick={save} disabled={saving}
+        style={{padding:"12px 20px",background:"var(--c-primary)",color:"#fff",border:0,borderRadius:"var(--r-md)"}}>
+        {saving ? "Saving..." : "Save Check-in"}
+      </button>
+    </Card>
 
-        <label style={{ display: "block", marginTop: "var(--space-4)" }}>
-          Workout
-          <textarea
-            value={workoutText}
-            onChange={(e) => setWorkoutText(e.target.value)}
-            placeholder="Example: Completed chest and shoulders workout"
-            rows={4}
-            style={{ display: "block", width: "100%", marginTop: "var(--space-2)" }}
-          />
-        </label>
-
-        <label style={{ display: "block", marginTop: "var(--space-4)" }}>
-          Meals
-          <textarea
-            value={mealsText}
-            onChange={(e) => setMealsText(e.target.value)}
-            placeholder="Example: Breakfast, lunch and dinner completed"
-            rows={4}
-            style={{ display: "block", width: "100%", marginTop: "var(--space-2)" }}
-          />
-        </label>
-
-        {message && (
-          <p style={{ marginTop: "var(--space-4)" }}>{message}</p>
-        )}
-
-        <div style={{ marginTop: "var(--space-4)" }}>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving..." : "Save Check-in"}
-          </Button>
-        </div>
-      </Card>
-
-      <Card title="Recent Check-ins">
-        {logs.length === 0 ? (
-          <EmptyState
-            title="No check-ins yet"
-            message="Your saved daily check-ins will appear here."
-          />
-        ) : (
-          <div style={{ display: "grid", gap: "var(--space-3)" }}>
-            {logs.map((log) => (
-              <div
-                key={log.date}
-                style={{
-                  padding: "var(--space-4)",
-                  border: "1px solid var(--color-border)",
-                  borderRadius: "var(--r-md)",
-                }}
-              >
-                <strong>{log.date}</strong>
-
-                {log.workoutText && (
-                  <p style={{ marginTop: "var(--space-2)" }}>
-                    <strong>Workout:</strong> {log.workoutText}
-                  </p>
-                )}
-
-                {log.mealsText && (
-                  <p style={{ marginTop: "var(--space-2)" }}>
-                    <strong>Meals:</strong> {log.mealsText}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-    </>
-  );
+    <Card title="Recent Check-ins">
+      {logs.length===0 ? <EmptyState title="No check-ins yet" message="Your activity will appear here."/> :
+      <div style={{display:"grid",gap:"12px"}}>
+        {logs.map(log=><div key={log.date} style={{padding:"16px",border:"1px solid var(--color-border)",borderRadius:"var(--r-md)"}}>
+          <strong>{log.date}</strong>
+          <p>{log.workoutText || "No workout logged"}</p>
+          <p>{log.mealsText || "No meals logged"}</p>
+        </div>)}
+      </div>}
+    </Card>
+  </>;
 }
