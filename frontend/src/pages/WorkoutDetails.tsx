@@ -1,249 +1,165 @@
-// frontend/src/pages/WorkoutDetails.tsx
-//
-// ============================================================================
-// REFERENCE PAGE — Sohail and Aayan, read this file before building any page.
-//
-// Every page in FitPlan follows this exact shape:
-//
-//   1. Imports        — components from '../components', types from '../types/api'
-//   2. Types          — what data this page displays
-//   3. The component  — a function that returns HTML
-//   4. State          — useState for anything that changes when a user clicks
-//   5. Three returns  — loading / empty / real content, in that order
-//
-// Copy this structure. Don't invent a new one.
-// ============================================================================
-
-import { useState } from 'react';
+import { useEffect, useState } from "react";
 import {
   AppShell,
   Card,
-  Button,
   PageHeader,
-  EmptyState,
   LoadingSkeleton,
-} from '../components';
-
-// ---------------------------------------------------------------------------
-// TYPES
-//
-// These describe the data the page receives. In Sprint 2 these move into
-// src/types/api.ts (Aayan owns that file) and get imported instead of
-// declared here — they must match Ankush's Pydantic models exactly.
-// ---------------------------------------------------------------------------
-
-interface Exercise {
-  name: string;
-  sets: number;
-  reps: string;      // a string, not a number — plans say "8-12", not 10
-  restSeconds: number;
-  notes?: string;    // the "?" means this field may be missing
-}
-
-interface WorkoutDay {
-  day: string;       // "Monday"
-  focus: string;     // "Push — chest, shoulders, triceps"
-  exercises: Exercise[];
-}
-
-// ---------------------------------------------------------------------------
-// TEMPORARY MOCK DATA
-//
-// Hardcoded so the page can be built and reviewed before the API exists.
-// Sprint 4 replaces this with a real call:
-//
-//   const plan = await api.get<WeeklyPlan>('/plan');
-//
-// Building a page against mock data first is normal and correct — it means
-// you are never blocked waiting for the backend.
-// ---------------------------------------------------------------------------
-
-const MOCK_DAYS: WorkoutDay[] = [
-  {
-    day: 'Monday',
-    focus: 'Push — chest, shoulders, triceps',
-    exercises: [
-      { name: 'Bench Press',       sets: 4, reps: '8-10', restSeconds: 90, notes: 'Keep shoulder blades retracted' },
-      { name: 'Overhead Press',    sets: 3, reps: '10-12', restSeconds: 75 },
-      { name: 'Incline Dumbbell',  sets: 3, reps: '10-12', restSeconds: 60 },
-      { name: 'Tricep Pushdown',   sets: 3, reps: '12-15', restSeconds: 45 },
-    ],
-  },
-  {
-    day: 'Tuesday',
-    focus: 'Pull — back, biceps',
-    exercises: [
-      { name: 'Deadlift',      sets: 4, reps: '5-6',   restSeconds: 150, notes: 'Stop the set if form breaks' },
-      { name: 'Lat Pulldown',  sets: 3, reps: '10-12', restSeconds: 75 },
-      { name: 'Barbell Row',   sets: 3, reps: '8-10',  restSeconds: 90 },
-    ],
-  },
-  {
-    day: 'Wednesday',
-    focus: 'Rest',
-    exercises: [],
-  },
-];
-
-// ---------------------------------------------------------------------------
-// THE COMPONENT
-//
-// A component is a function that returns HTML. That is the whole idea.
-// The name starts with a capital letter — React requires this.
-// ---------------------------------------------------------------------------
+  EmptyState,
+} from "../components";
+import { api } from "../api/client";
+import type { WeeklyPlan } from "../types/api";
 
 export default function WorkoutDetails() {
-  // ---- STATE ----
-  //
-  // useState gives you a value plus a function that changes it. When you call
-  // the setter, React redraws this component with the new value.
-  //
-  //   selectedDay      — which tab is open right now
-  //   setSelectedDay   — call this to switch tabs
-  //   0                — the starting value (first day)
+  const [plan, setPlan] = useState<WeeklyPlan | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [selectedDay, setSelectedDay] = useState(0);
+  useEffect(() => {
+    async function loadPlan() {
+      try {
+        setIsLoading(true);
+        setError("");
+        const response = await api.getPlan();
+        setPlan(response.plan);
+      } catch (err) {
+        console.error("Failed to load workout plan:", err);
+        setError("Unable to load your workout plan.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  // isLoading is hardcoded false for now. In Sprint 4 it becomes real:
-  //   const [isLoading, setIsLoading] = useState(true);
-  // and flips to false once the API call finishes.
-  const isLoading = false;
-
-  const days = MOCK_DAYS;
-  const current = days[selectedDay];
-
-  // ---- RETURN 1: LOADING ----
-  //
-  // Always handle loading first. A blank screen while data arrives looks
-  // broken; grey placeholder bars look like it's working.
+    loadPlan();
+  }, []);
 
   if (isLoading) {
     return (
-      <AppShell active="/workout" userName="Test User">
-        <PageHeader title="Workout Plan" />
+      <AppShell active="/workout">
+        <PageHeader
+          title="Workout Plan"
+          subtitle="Your personalised weekly training schedule"
+        />
         <Card>
-          <LoadingSkeleton lines={5} />
+          <LoadingSkeleton lines={8} />
         </Card>
       </AppShell>
     );
   }
 
-  // ---- RETURN 2: EMPTY ----
-  //
-  // Handle "there is no data" second. Never show an empty page with no
-  // explanation — tell the user why it's empty and what to do about it.
-
-  if (days.length === 0) {
+  if (error || !plan) {
     return (
-      <AppShell active="/workout" userName="Test User">
+      <AppShell active="/workout">
         <PageHeader title="Workout Plan" />
         <Card>
           <EmptyState
-            icon="🏋️"
-            title="No workout plan yet"
-            message="Generate your first plan to see your weekly workouts here."
-            action={<Button onClick={() => alert('Sprint 4 wires this up')}>Generate Plan</Button>}
+            title="No workout plan available"
+            message={error || "Generate a plan from your dashboard first."}
           />
         </Card>
       </AppShell>
     );
   }
 
-  // ---- RETURN 3: THE REAL PAGE ----
-
   return (
-    <AppShell active="/workout" userName="Test User">
+    <AppShell active="/workout">
       <PageHeader
         title="Workout Plan"
         subtitle="Your personalised weekly training schedule"
-        actions={<Button variant="secondary">Regenerate</Button>}
       />
 
-      {/*
-        DAY TABS
-        --------
-        .map() turns an array of data into an array of HTML elements.
-        This is the single most important thing to understand in React.
+      {plan.generationSource === "fallback" && (
+        <Card>
+          <p style={{ color: "var(--c-warning)" }}>
+            This plan is currently using the static fallback because AI
+            generation is still pending AWS account verification.
+          </p>
+        </Card>
+      )}
 
-        Read it as: "for each day in days, give me a Button".
+      {plan.coachNote && (
+        <Card title="Coach Note">
+          <p>{plan.coachNote}</p>
+        </Card>
+      )}
 
-        The `key` prop is required by React whenever you .map() into a list.
-        It must be unique and stable — use an id or a name, never the array
-        index if the list can reorder.
-      */}
-      <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)' }}>
-        {days.map((day, index) => (
-          <Button
-            key={day.day}
-            size="sm"
-            variant={index === selectedDay ? 'primary' : 'secondary'}
-            onClick={() => setSelectedDay(index)}
-          >
-            {day.day}
-          </Button>
-        ))}
-      </div>
-
-      {/*
-        THE SELECTED DAY
-        ----------------
-        `current.exercises.length === 0 ? A : B` is a ternary — inline if/else.
-        Use it for small either/or choices inside HTML.
-      */}
-      <Card title={`${current.day} — ${current.focus}`}>
-        {current.exercises.length === 0 ? (
-          <EmptyState
-            icon="😴"
-            title="Rest day"
-            message="No training scheduled. Recovery is part of the plan."
-          />
-        ) : (
-          <div>
-            {current.exercises.map(exercise => (
-              <div
-                key={exercise.name}
+      <Card title="Weekly Workout">
+        <div style={{ display: "grid", gap: "var(--sp-4)" }}>
+          {(plan.workoutPlan ?? []).map((day) => (
+            <div
+              key={day.day}
+              style={{
+                border: "1px solid var(--c-border)",
+                borderRadius: "var(--r-md)",
+                padding: "var(--sp-4)",
+              }}
+            >
+              <h2
                 style={{
-                  padding: 'var(--space-4) 0',
-                  borderBottom: '1px solid var(--color-border)',
+                  fontSize: "var(--fs-xl)",
+                  marginBottom: "var(--sp-2)",
                 }}
               >
-                <div style={{ fontWeight: 'var(--weight-semibold)' }}>
-                  {exercise.name}
-                </div>
+                Day {day.day}: {day.title}
+              </h2>
 
-                <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
-                  {exercise.sets} sets × {exercise.reps} reps · {exercise.restSeconds}s rest
-                </div>
+              <p
+                style={{
+                  color: "var(--c-text-secondary)",
+                  fontSize: "var(--fs-sm)",
+                  marginBottom: "var(--sp-3)",
+                }}
+              >
+                {day.isRestDay
+                  ? "Rest day"
+                  : `${day.durationMin} min � approximately ${day.estCalories} kcal`}
+              </p>
 
-                {/*
-                  `{condition && <thing/>}` renders `thing` only when the
-                  condition is true. Use it when there's no "else" case —
-                  here, notes are optional so we show nothing if absent.
-                */}
-                {exercise.notes && (
-                  <div style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-xs)', marginTop: 'var(--space-1)' }}>
-                    {exercise.notes}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+              {day.isRestDay ? (
+                <p style={{ color: "var(--c-text-secondary)" }}>
+                  Recovery day. No workout scheduled.
+                </p>
+              ) : (
+                <div style={{ display: "grid", gap: "var(--sp-3)" }}>
+                  {(day.exercises ?? []).map((exercise, index) => (
+                    <div
+                      key={`${exercise.name}-${index}`}
+                      style={{
+                        padding: "var(--sp-3)",
+                        border: "1px solid var(--c-border)",
+                        borderRadius: "var(--r-md)",
+                      }}
+                    >
+                      <strong>{exercise.name}</strong>
+
+                      <p
+                        style={{
+                          marginTop: "var(--sp-1)",
+                          color: "var(--c-text-secondary)",
+                        }}
+                      >
+                        {exercise.sets} sets � {exercise.reps} reps �{" "}
+                        {exercise.restSeconds}s rest
+                      </p>
+
+                      {exercise.notes && (
+                        <p
+                          style={{
+                            marginTop: "var(--sp-1)",
+                            color: "var(--c-text-secondary)",
+                            fontSize: "var(--fs-sm)",
+                          }}
+                        >
+                          {exercise.notes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </Card>
     </AppShell>
   );
 }
-
-// ============================================================================
-// THE FIVE RULES THIS FILE DEMONSTRATES
-//
-// 1. Every page is wrapped in <AppShell> with `active` set to its own route.
-// 2. Handle loading, then empty, then real content. In that order, every time.
-// 3. Use components from '../components'. Never write raw <button> or <div
-//    className="card">.
-// 4. Colours and spacing come from CSS variables — var(--color-primary), not
-//    '#2563EB'. If you're typing a hex code, stop and ask.
-// 5. Never call fetch() here. Data comes from '../api/client'.
-//
-// Stuck for 30 minutes? Post in the group. That's the rule.
-// ============================================================================
