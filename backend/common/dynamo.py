@@ -15,11 +15,17 @@ Key design (from the client's architecture doc):
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import boto3
 from boto3.dynamodb.conditions import Key
+
+
+def _now_iso() -> str:
+    return datetime.now(UTC).isoformat()
+
 
 TABLE_NAME = os.environ["TABLE_NAME"]
 REGION = os.environ.get("AWS_REGION", "us-east-1")
@@ -89,7 +95,7 @@ def sk_log(day: str) -> str:
 # --------------------------------------------------------------------------
 
 
-def get_item(user_id: str, sk: str) -> Optional[dict]:
+def get_item(user_id: str, sk: str) -> dict | None:
     resp = table().get_item(Key={"PK": pk(user_id), "SK": sk})
     item = resp.get("Item")
     return from_dynamo(item) if item else None
@@ -98,6 +104,40 @@ def get_item(user_id: str, sk: str) -> Optional[dict]:
 def put_item(user_id: str, sk: str, data: dict) -> None:
     item = {"PK": pk(user_id), "SK": sk, **data}
     table().put_item(Item=to_dynamo(item))
+
+
+def update_item(user_id: str, sk: str, data: dict) -> tuple[dict, bool]:
+    """Merge `data` into an item, server-side and atomically.
+
+    Only the attributes in `data` are written; attributes not in `data` are
+    left untouched (unlike put_item, which full-replaces). createdAt is set only
+    on first write via if_not_exists; updatedAt is always set.
+
+    Returns (item, created) — created is True if the row did not exist before.
+    """
+    now = _now_iso()
+    names = {"#createdAt": "createdAt", "#updatedAt": "updatedAt"}
+    values = {":now": now}
+    set_parts = [
+        "#createdAt = if_not_exists(#createdAt, :now)",
+        "#updatedAt = :now",
+    ]
+
+    for i, (k, v) in enumerate(data.items()):
+        names[f"#f{i}"] = k
+        values[f":v{i}"] = v
+        set_parts.append(f"#f{i} = :v{i}")
+
+    resp = table().update_item(
+        Key={"PK": pk(user_id), "SK": sk},
+        UpdateExpression="SET " + ", ".join(set_parts),
+        ExpressionAttributeNames=names,
+        ExpressionAttributeValues=to_dynamo(values),
+        ReturnValues="ALL_NEW",
+    )
+    item = from_dynamo(resp["Attributes"])
+    created = item.get("createdAt") == now
+    return item, created
 
 
 def query_prefix(
