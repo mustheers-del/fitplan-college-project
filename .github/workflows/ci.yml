@@ -57,6 +57,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      # Warn-mode for now: 43 existing findings, all style and Python-version
+      # modernisation, none of them bugs. Flip to blocking once the sweep is
+      # agreed and done.
+      - name: Lint (ruff)
+        run: ruff check .
+        continue-on-error: true
+
       - name: Run tests
         run: pytest -q
 
@@ -73,8 +80,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Pinned so CI and local agree - an unpinned lint tool silently changes
+      # its ruleset between runs.
       - name: Install cfn-lint
-        run: pip install cfn-lint
+        run: pip install cfn-lint==1.55.1
 
       - name: Lint SAM template
         run: cfn-lint backend/template.yaml
