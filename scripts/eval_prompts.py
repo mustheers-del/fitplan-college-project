@@ -13,12 +13,16 @@ This is an evaluation tool only. It does NOT write plans to DynamoDB.
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+OPENROUTER_INPUT_USD_PER_MILLION = 1.00
+OPENROUTER_OUTPUT_USD_PER_MILLION = 5.00
 
 # Make backend/ importable when this script is run from the repository root.
 ROOT = Path(__file__).resolve().parents[1]
@@ -208,6 +212,48 @@ PROFILES = [
 # ---------------------------------------------------------------------------
 
 from common.plan_validation import check_all_rules
+
+def estimate_cost(
+    prompt_tokens: int,
+    completion_tokens: int,
+) -> float:
+    """Estimate OpenRouter cost from token usage."""
+
+    input_cost = (
+        prompt_tokens / 1_000_000
+    ) * OPENROUTER_INPUT_USD_PER_MILLION
+
+    output_cost = (
+        completion_tokens / 1_000_000
+    ) * OPENROUTER_OUTPUT_USD_PER_MILLION
+
+    return input_cost + output_cost
+
+def estimate_max_run_cost(
+    profiles: list[EvalProfile],
+    max_tokens: int,
+) -> float:
+    """Estimate the maximum cost for an evaluation run."""
+
+    total_prompt_tokens = 0
+
+    for evaluation_profile in profiles:
+        profile = UserProfile.model_validate(
+            evaluation_profile.profile,
+        )
+
+        user_prompt = build_plan_user_prompt(
+            profile=profile,
+            week_start="2026-08-24",
+        )
+
+        total_prompt_tokens += len(user_prompt) // 4
+
+    return estimate_cost(
+        prompt_tokens=total_prompt_tokens,
+        completion_tokens=len(profiles) * max_tokens,
+    )
+
 # ---------------------------------------------------------------------------
 # Generation
 # ---------------------------------------------------------------------------
@@ -408,6 +454,44 @@ def make_report(results: list[dict[str, Any]]) -> str:
 # ---------------------------------------------------------------------------
 
 def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Run FitPlan prompt evaluation."
+    )
+    parser.add_argument(
+        "--profile",
+        choices=[p.name for p in PROFILES],
+        help="Run only one evaluation profile.",
+    )
+    args = parser.parse_args()
+
+    profiles_to_run = (
+        [p for p in PROFILES if p.name == args.profile]
+        if args.profile
+        else PROFILES
+    )
+
+    max_tokens = 8000
+    estimated_cost = estimate_max_run_cost(
+        profiles=profiles_to_run,
+        max_tokens=max_tokens,
+    )
+
+    print(
+        f"Estimated maximum OpenRouter cost: "
+        f"${estimated_cost:.4f}"
+    )
+    print(
+        "This is a maximum estimate based on the configured "
+        "token limit."
+    )
+
+    confirmation = input(
+        "Continue with this evaluation? [y/N]: "
+    ).strip().lower()
+
+    if confirmation not in {"y", "yes"}:
+        print("Evaluation cancelled.")
+        return 0
     print("=" * 70)
     print("FitPlan Prompt Evaluation")
     print("=" * 70)
@@ -419,9 +503,9 @@ def main() -> int:
 
     results = []
 
-    for index, evaluation_profile in enumerate(PROFILES, start=1):
+    for index, evaluation_profile in enumerate(profiles_to_run, start=1):
         print(
-            f"[{index}/{len(PROFILES)}] "
+            f"[{index}/{len(profiles_to_run)}] "
             f"{evaluation_profile.name}..."
         )
 
