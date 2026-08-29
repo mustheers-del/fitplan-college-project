@@ -117,6 +117,7 @@ def check_constraints(profile: UserProfile, plan: WeeklyPlan) -> list[str]:
                             f"DIET VIOLATION: '{m.name}' contains {w}"
                         )
 
+    # Check that every day has the expected number of meals.
     for md in plan.meal_plan:
         if len(md.meals) != profile.meals_per_day:
             problems.append(
@@ -125,14 +126,16 @@ def check_constraints(profile: UserProfile, plan: WeeklyPlan) -> list[str]:
             )
             break
 
+    # Check daily calorie target.
     if profile.calorie_target:
         for md in plan.meal_plan:
-            if abs(
-                md.total_calories - profile.calorie_target
-            ) > 150:
+            delta = md.total_calories - profile.calorie_target
+
+            if abs(delta) > 150:
                 problems.append(
                     f"day {md.day}: {md.total_calories} kcal "
-                    f"vs target {profile.calorie_target}"
+                    f"vs target {profile.calorie_target} "
+                    f"(delta {delta:+d})"
                 )
                 break
 
