@@ -26,7 +26,9 @@ def make_profile(**overrides) -> UserProfile:
         "supplements": [],
         "budgetTier": "medium",
     }
+
     data.update(overrides)
+
     return UserProfile.model_validate(data)
 
 
@@ -85,10 +87,17 @@ def make_plan(
                 {
                     "name": "Rice and vegetables",
                     "slot": slots[i % len(slots)],
-                    "calories": 600,
+
+                    # 30g protein  = 120 kcal
+                    # 100g carbs   = 400 kcal
+                    # 16g fats     = 144 kcal
+                    # Total        = 664 kcal
+                    "calories": 664,
+
                     "proteinG": 30,
-                    "carbsG": 70,
-                    "fatsG": 15,
+                    "carbsG": 100,
+                    "fatsG": 16,
+
                     "prepMinutes": 20,
                     "ingredients": ["rice", "vegetables"],
                 }
@@ -98,7 +107,11 @@ def make_plan(
             {
                 "day": day,
                 "meals": meals,
-                "totalCalories": 2000,
+
+                # 3 meals × 664 kcal = 1992 kcal
+                # This is within +/-100 kcal of the 2000 kcal target.
+                "totalCalories": 1992,
+
                 "totalProteinG": 90,
             }
         )
@@ -130,11 +143,15 @@ def test_training_day_count_is_checked():
 
     failures = check_all_rules(plan, profile)
 
-    assert any("expected 4 training days" in failure for failure in failures)
+    assert any(
+        "expected 4 training days" in failure
+        for failure in failures
+    )
 
 
 def test_knee_injury_rejects_forbidden_exercise():
     profile = make_profile(injuries=["knee pain"])
+
     plan = make_plan(
         profile,
         exercise_names=["Squat"],
@@ -142,11 +159,15 @@ def test_knee_injury_rejects_forbidden_exercise():
 
     failures = check_all_rules(plan, profile)
 
-    assert any("Squat" in failure for failure in failures)
+    assert any(
+        "Squat" in failure
+        for failure in failures
+    )
 
 
 def test_bodyweight_profile_rejects_equipment_exercise():
     profile = make_profile(equipment=["bodyweight"])
+
     plan = make_plan(
         profile,
         exercise_names=["Barbell Bench Press"],
@@ -154,11 +175,15 @@ def test_bodyweight_profile_rejects_equipment_exercise():
 
     failures = check_all_rules(plan, profile)
 
-    assert any("barbell" in failure.lower() for failure in failures)
+    assert any(
+        "barbell" in failure.lower()
+        for failure in failures
+    )
 
 
 def test_meals_per_day_is_checked():
     profile = make_profile(mealsPerDay=4)
+
     plan = make_plan(
         profile,
         meal_count=3,
@@ -166,7 +191,10 @@ def test_meals_per_day_is_checked():
 
     failures = check_all_rules(plan, profile)
 
-    assert any("expected 4 meals" in failure for failure in failures)
+    assert any(
+        "expected 4 meals" in failure
+        for failure in failures
+    )
 
 
 def test_vegetarian_profile_rejects_meat():
@@ -177,22 +205,32 @@ def test_vegetarian_profile_rejects_meat():
 
     failures = check_all_rules(plan, profile)
 
-    assert any("chicken" in failure.lower() for failure in failures)
+    assert any(
+        "chicken" in failure.lower()
+        for failure in failures
+    )
 
 
 def test_vegan_profile_rejects_meat():
     profile = make_profile(mealPref="vegan")
     plan = make_plan(profile)
 
-    plan.meal_plan[0].meals[0].ingredients = ["chicken", "rice"]
+    plan.meal_plan[0].meals[0].ingredients = [
+        "chicken",
+        "rice",
+    ]
 
     failures = check_all_rules(plan, profile)
 
-    assert any("chicken" in failure.lower() for failure in failures)
+    assert any(
+        "chicken" in failure.lower()
+        for failure in failures
+    )
 
 
 def test_beginner_profile_rejects_advanced_barbell_exercise():
     profile = make_profile(experience="beginner")
+
     plan = make_plan(
         profile,
         exercise_names=["Barbell Squat"],
@@ -200,10 +238,15 @@ def test_beginner_profile_rejects_advanced_barbell_exercise():
 
     failures = check_all_rules(plan, profile)
 
-    assert any("advanced exercise" in failure.lower() for failure in failures)
+    assert any(
+        "advanced exercise" in failure.lower()
+        for failure in failures
+    )
+
 
 def test_beginner_bodyweight_romanian_deadlift_is_not_flagged_as_barbell():
     profile = make_profile(experience="beginner")
+
     plan = make_plan(
         profile,
         exercise_names=["Romanian Deadlifts (Bodyweight)"],
