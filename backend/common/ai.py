@@ -126,13 +126,45 @@ def _invoke(*args: Any, **kwargs: Any):
     )
 
 
-def _validation_summary(exc: Exception) -> str:
-    """Return a compact validation message for the retry."""
+def _validation_summary(
+    exc: Exception,
+    profile: UserProfile | None = None,
+) -> str:
+    """Return a compact, useful validation message for the retry."""
 
-    if isinstance(exc, ValidationError):
-        return str(exc)
+    summary = str(exc)
 
-    return str(exc)
+    # Add explicit calorie feedback so the model gets clear
+    # numeric information instead of only the Pydantic error.
+    if profile is not None and profile.calorie_target is not None:
+        target = profile.calorie_target
+
+        match = re.search(
+            r"totalCalories.*?says\s+(\d+)",
+            summary,
+            flags=re.IGNORECASE | re.DOTALL,
+        )
+
+        if match:
+            actual = int(match.group(1))
+            difference = actual - target
+            adjustment = abs(difference)
+
+            if difference < 0:
+                direction = f"increase by about {adjustment} kcal"
+            elif difference > 0:
+                direction = f"decrease by about {adjustment} kcal"
+            else:
+                direction = "no calorie adjustment needed"
+
+            summary += (
+                f"\n\nCALORIE FEEDBACK: "
+                f"{actual} kcal vs target {target}; "
+                f"difference {difference}; "
+                f"{direction}"
+            )
+
+    return summary
 
 
 def invoke_structured(
@@ -210,7 +242,7 @@ def invoke_structured(
 Your previous response failed validation.
 
 Validation error:
-{_validation_summary(first_error)}
+{_validation_summary(first_error, profile)}
 
 Generate the ENTIRE weekly plan again from scratch.
 
