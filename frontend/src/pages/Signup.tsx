@@ -1,123 +1,175 @@
-import { useState } from "react";
-import { FcGoogle } from "react-icons/fc";
-import { FaApple } from "react-icons/fa";
-import "./Signup.css";
+import { FormEvent, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Signup() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const navigate = useNavigate();
+  const { signUp, confirmSignUp } = useAuth();
 
-  return (
-    <main className="signup-page">
-      <section className="signup-card">
-        <div className="signup-brand">
-          <svg
-            className="fitplan-logo"
-            viewBox="0 0 64 64"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="FitPlan logo"
-          >
-            <path
-              fill="#2563EB"
-              d="M13 7h39c5 0 7 3 6 7l-1 3c-1 4-4 6-8 6H11c-3 0-5-3-4-6l1-4c1-4 2-6 5-6Z"
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
+
+  const [step, setStep] = useState<"signup" | "confirm">("signup");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSignup = async (e: FormEvent) => {
+    e.preventDefault();
+
+    setError("");
+    setLoading(true);
+
+    try {
+      await signUp(email.trim(), password);
+      setStep("confirm");
+    } catch (err) {
+      console.error(err);
+      setError("Could not create the account. Please check your details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleConfirm = async (e: FormEvent) => {
+    e.preventDefault();
+
+    setError("");
+    setLoading(true);
+
+    try {
+      await confirmSignUp(email.trim(), code.trim());
+
+      navigate("/onboarding");
+    } catch (err) {
+      console.error(err);
+      setError("Invalid verification code. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (step === "confirm") {
+    return (
+      <div
+        style={{
+          padding: "40px",
+          maxWidth: "400px",
+          margin: "0 auto",
+        }}
+      >
+        <h1>Verify your email</h1>
+
+        <p style={{ marginTop: "10px", marginBottom: "20px" }}>
+          We sent a verification code to <strong>{email}</strong>.
+        </p>
+
+        <form onSubmit={handleConfirm}>
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="code">Verification code</label>
+
+            <input
+              id="code"
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter verification code"
+              required
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px",
+                marginTop: "6px",
+              }}
             />
-            <path
-              fill="#14B8A6"
-              d="M11 25h31c5 0 7 3 6 7l-1 3c-1 4-4 6-8 6H9l2-16Z"
-            />
-            <path fill="#2563EB" d="M9 25h15l-5 28c-1 5-4 8-9 8H5L9 25Z" />
-          </svg>
-
-          <span className="signup-brand-name">FitPlan</span>
-        </div>
-
-        <div className="signup-heading">
-          <h1>Create Your Account</h1>
-          <p>Start your fitness journey today</p>
-        </div>
-
-        <form className="signup-form">
-          <div className="signup-field">
-            <label htmlFor="name">Full Name</label>
-            <input id="name" type="text" placeholder="Enter your full name" />
           </div>
 
-          <div className="signup-field">
-            <label htmlFor="email">Email</label>
-            <input id="email" type="email" placeholder="Enter your email" />
-          </div>
+          {error && (
+            <p style={{ color: "red", marginBottom: "16px" }}>
+              {error}
+            </p>
+          )}
 
-          <div className="signup-field">
-            <label htmlFor="password">Password</label>
-
-            <div className="signup-password-wrapper">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Create a password"
-              />
-
-              <button
-                type="button"
-                className="signup-password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
-
-          <div className="signup-field">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-
-            <div className="signup-password-wrapper">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm your password"
-              />
-
-              <button
-                type="button"
-                className="signup-password-toggle"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
-
-          <label className="signup-terms">
-            <input type="checkbox" />
-            <span>
-              I agree to the <a href="#">Terms of Service</a> and{" "}
-              <a href="#">Privacy Policy</a>
-            </span>
-          </label>
-
-          <button type="button" className="signup-button">
-            Create Account
+          <button type="submit" disabled={loading}>
+            {loading ? "Verifying..." : "Verify Email"}
           </button>
         </form>
 
-        <div className="signup-divider">
-          <span>or continue with</span>
-        </div>
-
-        <div className="signup-social-login">
-          <button type="button" aria-label="Continue with Google">
-            <FcGoogle size={22} />
-          </button>
-
-          <button type="button" aria-label="Continue with Apple">
-            <FaApple size={22} />
-          </button>
-        </div>
-
-        <p className="signup-login-link">
-          Already have an account? <a href="/login">Sign In</a>
+        <p style={{ marginTop: "20px" }}>
+          Already verified? <Link to="/login">Go to login</Link>
         </p>
-      </section>
-    </main>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        padding: "40px",
+        maxWidth: "400px",
+        margin: "0 auto",
+      }}
+    >
+      <h1>Create Account</h1>
+
+      <p style={{ marginTop: "10px", marginBottom: "20px" }}>
+        Create your FitPlan account to get started.
+      </p>
+
+      <form onSubmit={handleSignup}>
+        <div style={{ marginBottom: "16px" }}>
+          <label htmlFor="email">Email</label>
+
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label htmlFor="password">Password</label>
+
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Create a password"
+            minLength={8}
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+            }}
+          />
+        </div>
+
+        {error && (
+          <p style={{ color: "red", marginBottom: "16px" }}>
+            {error}
+          </p>
+        )}
+
+        <button type="submit" disabled={loading}>
+          {loading ? "Creating account..." : "Create Account"}
+        </button>
+      </form>
+
+      <p style={{ marginTop: "20px" }}>
+        Already have an account? <Link to="/login">Login</Link>
+      </p>
+    </div>
   );
 }

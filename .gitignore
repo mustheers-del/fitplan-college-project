@@ -23,3 +23,11 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Lambda layer build output — generated, never edited by hand
+backend/layer/
+backend/common-layer.zip
+
+# local scratch
+profiles-audit.json
+gym-plan-sohail/

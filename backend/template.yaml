@@ -22,6 +22,42 @@ Parameters:
     Type: String
     Default: us.amazon.nova-lite-v1:0
     Description: Use the us. inference profile, never the bare model ID
+  AiProvider:
+    Type: String
+    Default: openrouter
+    AllowedValues: [openrouter, bedrock]
+    Description: >-
+      Which AI backend the plan generator calls. Bedrock model access was
+      never granted on this account, so openrouter is the working default.
+      Kept as a parameter so we can switch back without a code change if
+      Bedrock is ever approved.
+  OpenRouterModelId:
+    Type: String
+    Default: anthropic/claude-haiku-4.5
+    Description: OpenRouter model slug used for plan generation.
+  OpenRouterKeyParam:
+    Type: String
+    Default: fitplan_openrouter_key
+    Description: >-
+      Name of the SSM SecureString holding the OpenRouter API key. The key
+      itself is never an environment variable - the function reads and
+      decrypts it at runtime. The IAM policy below is scoped to this exact
+      parameter name, so the two cannot drift apart.
+  OpenRouterTimeout:
+    Type: String
+    Default: "45"
+    Description: >-
+      Seconds to wait on an OpenRouter response before giving up. Must stay
+      below GeneratePlanFunction's 60s Timeout so the function has time to
+      log the failure and return a clean error instead of being killed.
+  EnableFrontendHosting:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: >-
+      Sprint 3 frontend hosting (S3 + CloudFront). OFF by default because the
+      AWS account is not yet verified for CloudFront, and leaving it on blocks
+      every backend deploy. Flip to true once verification clears.
 
 Globals:
   Function:
@@ -35,6 +71,10 @@ Globals:
         TABLE_NAME: !Ref MainTable
         STAGE: !Ref Stage
         BEDROCK_MODEL_ID: !Ref BedrockModelId
+        AI_PROVIDER: !Ref AiProvider
+        OPENROUTER_MODEL_ID: !Ref OpenRouterModelId
+        OPENROUTER_KEY_PARAM: !Ref OpenRouterKeyParam
+        OPENROUTER_TIMEOUT: !Ref OpenRouterTimeout
         POWERTOOLS_SERVICE_NAME: fitplan
         LOG_LEVEL: INFO
 
@@ -45,14 +85,11 @@ Resources:
   # -----------------------------------------------------------------------
   CommonLayer:
     Type: AWS::Serverless::LayerVersion
-    Metadata:
-      BuildMethod: python3.12
     Properties:
       LayerName: !Sub fitplan-${Stage}-common
       ContentUri: layer/
       CompatibleRuntimes: [python3.12]
       RetentionPolicy: Delete
-
   # -----------------------------------------------------------------------
   # Data - single table, on-demand. NEVER provisioned capacity.
   # -----------------------------------------------------------------------
@@ -126,6 +163,29 @@ Resources:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Path: /onboard, Method: POST }
 
+  ProfileFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-profile
+      CodeUri: functions/profile/
+      Handler: handler.lambda_handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MainTable
+      Events:
+        Get:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /profile
+            Method: GET
+        Patch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /profile
+            Method: PATCH
+
   GetPlanFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -151,6 +211,12 @@ Resources:
       Handler: handler.lambda_handler
       Timeout: 60 # cold Bedrock call + one retry
       MemorySize: 512
+      Environment:
+        Variables:
+          AI_PROVIDER: openrouter
+          OPENROUTER_MODEL_ID: anthropic/claude-haiku-4.5
+          OPENROUTER_KEY_PARAM: fitplan_openrouter_key
+          OPENROUTER_TIMEOUT: "45"
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
         - Statement:
@@ -162,6 +228,21 @@ Resources:
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
                 - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+        - Statement:
+            - Effect: Allow
+              # OpenRouter API key - SecureString created by Mustheer.
+              # Scoped to the OpenRouterKeyParam parameter so the permission
+              # and the parameter name can never drift apart.
+              Action: [ssm:GetParameter]
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+            - Effect: Allow
+              # SecureString decryption. ViaService means this role can only
+              # decrypt through SSM, never against KMS directly.
+              Action: [kms:Decrypt]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
       Events:
         Post:
           Type: HttpApi
@@ -220,6 +301,12 @@ Resources:
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
                 - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+        # NOTE (Parshuram): this function calls the AI too, so when it moves to
+        # OpenRouter it will need the same ssm:GetParameter + kms:Decrypt block
+        # that GeneratePlanFunction has above. Harmless today - the schedule is
+        # DISABLED and the handler has no code yet - but whoever enables it in
+        # Sprint 6 hits an AccessDenied on the first parameter read. Left out
+        # deliberately pending Mustheer's call, not an oversight.
       Events:
         WeeklySchedule:
           Type: ScheduleV2
@@ -281,8 +368,91 @@ Resources:
       LogGroupName: !Sub /aws/lambda/fitplan-${Stage}-weekly-plan-gen
       RetentionInDays: !If [IsProd, 30, 7]
 
+  # -----------------------------------------------------------------------
+  # Frontend hosting (Sprint 3) - private S3 bucket, served via CloudFront.
+  # The bucket is NEVER public; CloudFront reads it with Origin Access Control.
+  # -----------------------------------------------------------------------
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Condition: FrontendHostingEnabled
+    Properties:
+      BucketName: !Sub fitplan-${Stage}-frontend-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  FrontendOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Condition: FrontendHostingEnabled
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub fitplan-${Stage}-frontend-oac
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  FrontendDistribution:
+    Type: AWS::CloudFront::Distribution
+    Condition: FrontendHostingEnabled
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub fitplan-${Stage} frontend
+        DefaultRootObject: index.html
+        # PriceClass_100 = US + Europe only, cheapest. See PR note re: India.
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: FrontendS3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt FrontendOriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+        DefaultCacheBehavior:
+          TargetOriginId: FrontendS3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          # Managed-CachingOptimized
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+        # SPA routing: React Router owns the paths, not S3. Without these,
+        # navigation works on click but a page refresh 404s.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+            ErrorCachingMinTTL: 0
+
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: FrontendHostingEnabled
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipalReadOnly
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub ${FrontendBucket.Arn}/*
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}
+
 Conditions:
   IsProd: !Equals [!Ref Stage, prod]
+  FrontendHostingEnabled: !Equals [!Ref EnableFrontendHosting, "true"]
 
 Outputs:
   ApiUrl:
@@ -293,3 +463,11 @@ Outputs:
   HealthCheck:
     Description: Sprint 1 exit criteria - curl this
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/health
+  FrontendUrl:
+    Condition: FrontendHostingEnabled
+    Description: Public URL for the frontend - Sprint 3 uploads the build here
+    Value: !Sub https://${FrontendDistribution.DomainName}
+  FrontendBucketName:
+    Condition: FrontendHostingEnabled
+    Description: S3 bucket the built frontend is synced into
+    Value: !Ref FrontendBucket

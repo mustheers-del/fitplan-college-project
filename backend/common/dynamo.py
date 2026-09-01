@@ -15,13 +15,19 @@ Key design (from the client's architecture doc):
 from __future__ import annotations
 
 import os
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 
 import boto3
 from boto3.dynamodb.conditions import Key
 
-TABLE_NAME = os.environ.get("TABLE_NAME", "fitplan-dev-main")
+
+def _now_iso() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+TABLE_NAME = os.environ["TABLE_NAME"]
 REGION = os.environ.get("AWS_REGION", "us-east-1")
 
 _table = None
@@ -89,7 +95,7 @@ def sk_log(day: str) -> str:
 # --------------------------------------------------------------------------
 
 
-def get_item(user_id: str, sk: str) -> Optional[dict]:
+def get_item(user_id: str, sk: str) -> dict | None:
     resp = table().get_item(Key={"PK": pk(user_id), "SK": sk})
     item = resp.get("Item")
     return from_dynamo(item) if item else None
@@ -100,23 +106,93 @@ def put_item(user_id: str, sk: str, data: dict) -> None:
     table().put_item(Item=to_dynamo(item))
 
 
-def query_prefix(user_id: str, sk_prefix: str, limit: int = 50, ascending: bool = False) -> list[dict]:
-    """All items for a user whose SK starts with `sk_prefix`."""
-    resp = table().query(
-        KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").begins_with(sk_prefix),
-        Limit=limit,
-        ScanIndexForward=ascending,
+def update_item(user_id: str, sk: str, data: dict) -> tuple[dict, bool]:
+    """Merge `data` into an item, server-side and atomically.
+
+    Only the attributes in `data` are written; attributes not in `data` are
+    left untouched (unlike put_item, which full-replaces). createdAt is set only
+    on first write via if_not_exists; updatedAt is always set.
+
+    Returns (item, created) — created is True if the row did not exist before.
+    """
+    now = _now_iso()
+    names = {"#createdAt": "createdAt", "#updatedAt": "updatedAt"}
+    values = {":now": now}
+    set_parts = [
+        "#createdAt = if_not_exists(#createdAt, :now)",
+        "#updatedAt = :now",
+    ]
+
+    for i, (k, v) in enumerate(data.items()):
+        names[f"#f{i}"] = k
+        values[f":v{i}"] = v
+        set_parts.append(f"#f{i} = :v{i}")
+
+    resp = table().update_item(
+        Key={"PK": pk(user_id), "SK": sk},
+        UpdateExpression="SET " + ", ".join(set_parts),
+        ExpressionAttributeNames=names,
+        ExpressionAttributeValues=to_dynamo(values),
+        ReturnValues="ALL_NEW",
     )
-    return [from_dynamo(i) for i in resp.get("Items", [])]
+    item = from_dynamo(resp["Attributes"])
+    created = item.get("createdAt") == now
+    return item, created
 
 
-def query_between(user_id: str, sk_start: str, sk_end: str) -> list[dict]:
-    """Range query — e.g. a week of DAILYLOG# entries."""
-    resp = table().query(
-        KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").between(sk_start, sk_end),
-        ScanIndexForward=True,
-    )
-    return [from_dynamo(i) for i in resp.get("Items", [])]
+def query_prefix(
+    user_id: str, sk_prefix: str, limit: int = 50, ascending: bool = False
+) -> list[dict]:
+    """All items for a user whose SK starts with `sk_prefix`.
+
+    Pages through results — DynamoDB returns at most 1MB per call and signals
+    more via LastEvaluatedKey. Without this, a user's history silently stops
+    at the first page with no error.
+
+    `limit` caps the number of items returned. Pass limit=None for all of them.
+    """
+    items: list[dict] = []
+    kwargs: dict = {}
+
+    while True:
+        resp = table().query(
+            KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").begins_with(sk_prefix),
+            ScanIndexForward=ascending,
+            **kwargs,
+        )
+        items.extend(resp.get("Items", []))
+
+        last_key = resp.get("LastEvaluatedKey")
+        if not last_key or (limit is not None and len(items) >= limit):
+            break
+        kwargs["ExclusiveStartKey"] = last_key
+
+    if limit is not None:
+        items = items[:limit]
+    return [from_dynamo(i) for i in items]
+
+
+def query_between(user_id: str, sk_start: str, sk_end: str, limit: int | None = None) -> list[dict]:
+    """Range query — e.g. a week of DAILYLOG# entries. Pages through results."""
+    items: list[dict] = []
+    kwargs: dict = {}
+
+    while True:
+        resp = table().query(
+            KeyConditionExpression=Key("PK").eq(pk(user_id)) & Key("SK").between(sk_start, sk_end),
+            ScanIndexForward=True,
+            **kwargs,
+        )
+        items.extend(resp.get("Items", []))
+
+        last_key = resp.get("LastEvaluatedKey")
+        if not last_key or (limit is not None and len(items) >= limit):
+            break
+        kwargs["ExclusiveStartKey"] = last_key
+
+    if limit is not None:
+        items = items[:limit]
+    return [from_dynamo(i) for i in items]
 
 
 def delete_item(user_id: str, sk: str) -> None:

@@ -1,7 +1,9 @@
-import { Outlet } from "react-router-dom";
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/auth/AuthContext";
 
-/** Sidebar navigation. Order matches the client mockup — don't reorder. */
+const AppShellContext = createContext(false);
+
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "Workout", href: "/workout" },
@@ -16,75 +18,156 @@ const NAV_ITEMS = [
 
 interface AppShellProps {
   children?: ReactNode;
-  /** href of the current page, used to highlight the sidebar link. */
   active?: string;
-  /** Shown in the top bar. Comes from Cognito once auth lands in Sprint 2. */
   userName?: string;
 }
 
 export function AppShell({ children, active, userName }: AppShellProps) {
-  const initials = userName
-    ? userName
-        .trim()
-        .split(/\s+/)
-        .map((w) => w[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "?";
+  const alreadyInsideShell = useContext(AppShellContext);
+
+  if (alreadyInsideShell) {
+    return <>{children}</>;
+  }
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <AppShellContext.Provider value={true}>
+      <AppShellLayout active={active} userName={userName}>
+        {children}
+      </AppShellLayout>
+    </AppShellContext.Provider>
+  );
+}
+
+function AppShellLayout({
+  children,
+  active,
+  userName,
+}: AppShellProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { email, signOut } = useAuth();
+
+  const currentPath = active || location.pathname;
+  const displayName = userName || email || "FitPlan User";
+
+  async function handleLogout() {
+    await signOut();
+    navigate("/login", { replace: true });
+  }
+
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        background: "var(--c-bg, #f8fafc)",
+        color: "var(--c-text, #111827)",
+      }}
+    >
       <aside
         style={{
-          width: "var(--sidebar-w)",
-          background: "var(--c-surface)",
-          borderRight: "1px solid var(--c-border)",
-          padding: "var(--sp-6) var(--sp-4)",
+          width: "240px",
+          minHeight: "100vh",
+          padding: "24px 16px",
+          borderRight: "1px solid var(--c-border, #e5e7eb)",
+          background: "var(--c-surface, #ffffff)",
+          boxSizing: "border-box",
+          flexShrink: 0,
         }}
       >
         <div
           style={{
-            fontWeight: "var(--fw-bold)",
-            fontSize: "var(--fs-xl)",
-            color: "var(--c-primary)",
-            marginBottom: "var(--sp-8)",
-            paddingLeft: "var(--sp-3)",
+            fontSize: "22px",
+            fontWeight: 700,
+            marginBottom: "28px",
+            padding: "0 12px",
           }}
         >
           FitPlan
         </div>
 
-        <nav>
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={
-                "fp-sidebar__link" +
-                (item.href === active ? " fp-sidebar__link--active" : "")
-              }
-              aria-current={item.href === active ? "page" : undefined}
-            >
-              {item.label}
-            </a>
-          ))}
+        <nav style={{ display: "grid", gap: "6px" }}>
+          {NAV_ITEMS.map((item) => {
+            const isActive = currentPath === item.href;
+
+            return (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => navigate(item.href)}
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "11px 12px",
+                  border: "none",
+                  borderRadius: "8px",
+                  background: isActive
+                    ? "var(--c-primary, #2563eb)"
+                    : "transparent",
+                  color: isActive
+                    ? "#ffffff"
+                    : "var(--c-text, #111827)",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  fontWeight: isActive ? 600 : 500,
+                }}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
+
+        <div
+          style={{
+            marginTop: "auto",
+            paddingTop: "28px",
+            paddingLeft: "12px",
+            paddingRight: "12px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "13px",
+              color: "var(--c-text-secondary, #6b7280)",
+              marginBottom: "12px",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {displayName}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            style={{
+              width: "100%",
+              padding: "10px 12px",
+              border: "1px solid var(--c-border, #e5e7eb)",
+              borderRadius: "8px",
+              background: "transparent",
+              color: "var(--c-text, #111827)",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </aside>
 
-      <div className="fp-main">
-        <header className="fp-topbar">
-          <div />
-          <div className="fp-topbar__user">
-            <span>{userName ?? "Not signed in"}</span>
-            <div className="fp-avatar" aria-hidden="true">
-              {initials}
-            </div>
-          </div>
-        </header>
-
-        <main className="fp-content">{children ?? <Outlet />}</main>
-      </div>
+      <main
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: "32px",
+          boxSizing: "border-box",
+        }}
+      >
+        {children ?? <Outlet />}
+      </main>
     </div>
   );
 }

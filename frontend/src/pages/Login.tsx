@@ -1,115 +1,141 @@
-import { useState } from "react";
-import "./Login.css";
-import { FcGoogle } from "react-icons/fc";
-import { FaApple } from "react-icons/fa";
+import { FormEvent, useState } from "react";
+import { useAuth } from "../auth/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Login() {
-  const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
+  const { signIn, signOut, userId, loading: authLoading } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  if (!authLoading && userId) {
+    return (
+      <div
+        style={{
+          padding: "40px",
+          maxWidth: "400px",
+          margin: "0 auto",
+        }}
+      >
+        <h1>Already signed in</h1>
+
+        <p style={{ marginBottom: "20px" }}>
+          You are already signed in. Sign out before logging in with another
+          account.
+        </p>
+
+        <button
+          type="button"
+          onClick={async () => {
+            await signOut();
+            window.location.reload();
+          }}
+        >
+          Sign out
+        </button>
+      </div>
+    );
+  }
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    setError("");
+    setLoading(true);
+
+    try {
+      await signIn(email, password);
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("LOGIN ERROR:", err);
+
+      setError(
+        err?.message ||
+          err?.name ||
+          "Login failed. Please check your email and password.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <main className="login-page">
-      <section className="login-card">
-        <div className="login-brand">
-          <svg
-            className="fitplan-logo"
-            viewBox="0 0 64 64"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="FitPlan logo"
+    <div
+      style={{
+        padding: "40px",
+        maxWidth: "400px",
+        margin: "0 auto",
+      }}
+    >
+      <h1>Login</h1>
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: "16px" }}>
+          <label htmlFor="email">Email</label>
+
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="demo@fitplan.test"
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+              color: "#111827",
+              backgroundColor: "#ffffff",
+            }}
+          />
+        </div>
+
+        <div style={{ marginBottom: "16px" }}>
+          <label htmlFor="password">Password</label>
+
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px",
+              marginTop: "6px",
+              color: "#111827",
+              backgroundColor: "#ffffff",
+            }}
+          />
+
+          <p style={{ marginTop: "8px", textAlign: "right" }}>
+            <Link to="/forgot-password">Forgot password?</Link>
+          </p>
+        </div>
+
+        {error && (
+          <p
+            style={{
+              color: "red",
+              marginBottom: "16px",
+            }}
           >
-            <path
-              fill="#2563EB"
-              d="M13 7h39c5 0 7 3 6 7l-1 3c-1 4-4 6-8 6H11c-3 0-5-3-4-6l1-4c1-4 2-6 5-6Z"
-            />
+            {error}
+          </p>
+        )}
 
-            <path
-              fill="#14B8A6"
-              d="M11 25h31c5 0 7 3 6 7l-1 3c-1 4-4 6-8 6H9l2-16Z"
-            />
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+      </form>
 
-            <path fill="#2563EB" d="M9 25h15l-5 28c-1 5-4 8-9 8H5L9 25Z" />
-          </svg>
-
-          <span className="login-brand-name">FitPlan</span>
-        </div>
-
-        <div className="login-heading">
-          <h1>Welcome Back 👋</h1>
-          <p>Sign in to continue your fitness journey</p>
-        </div>
-
-        <form className="login-form">
-          <div className="login-field">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-            />
-          </div>
-
-          <div className="login-field">
-            <label htmlFor="password">Password</label>
-
-            <div className="password-wrapper">
-              <input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Enter your password"
-                autoComplete="current-password"
-              />
-
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label="Toggle password visibility"
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
-          </div>
-
-          <div className="login-options">
-            <label className="remember-me">
-              <input type="checkbox" />
-              <span>Remember me</span>
-            </label>
-
-            <a href="/forgot-password">Forgot Password?</a>
-          </div>
-
-          <button className="login-button" type="submit">
-            Sign In
-          </button>
-        </form>
-
-        <div className="login-divider">
-          <span>or continue with</span>
-        </div>
-
-        <div className="social-login">
-          <button
-            type="button"
-            aria-label="Continue with Google"
-            className="social-button"
-          >
-            <FcGoogle size={22} />
-          </button>
-
-          <button
-            type="button"
-            aria-label="Continue with Apple"
-            className="social-button"
-          >
-            <FaApple size={22} />
-          </button>
-        </div>
-
-        <p className="login-signup">
-          Don't have an account? <a href="/signup">Create Account</a>
-        </p>
-      </section>
-    </main>
+      <p style={{ marginTop: "20px" }}>
+        Don't have an account? <Link to="/signup">Sign up</Link>
+      </p>
+    </div>
   );
 }

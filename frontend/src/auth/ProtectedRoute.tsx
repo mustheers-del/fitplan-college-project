@@ -1,15 +1,17 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "./useAuth";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
-/**
- * OWNER: [E], Sprint 2.
- * Blocks unauthenticated users. Once profiles exist (Sprint 3), also
- * redirect a logged-in user with no profile straight into /onboarding.
- */
 export default function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { userId, loading } = useAuth();
+  const location = useLocation();
 
-  if (loading) return <div style={{ padding: 40 }}>Loading…</div>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!userId) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
   return <Outlet />;
 }

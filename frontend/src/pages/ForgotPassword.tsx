@@ -1,67 +1,207 @@
-import "./ForgotPassword.css";
+import { FormEvent, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 export default function ForgotPassword() {
+  const navigate = useNavigate();
+  const { resetPassword, confirmResetPassword } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [codeSent, setCodeSent] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSendCode = async (e: FormEvent) => {
+    e.preventDefault();
+
+    setError("");
+    setMessage("");
+    setLoading(true);
+
+    try {
+      await resetPassword(email);
+
+      setCodeSent(true);
+      setMessage("A verification code has been sent to your email.");
+    } catch (err) {
+      console.error(err);
+      setError("Could not send the verification code. Please check your email.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: FormEvent) => {
+    e.preventDefault();
+
+    setError("");
+    setMessage("");
+
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await confirmResetPassword(email, code, newPassword);
+
+      setMessage("Password changed successfully. Redirecting to login...");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+    } catch (err) {
+      console.error(err);
+      setError(
+        "Could not reset your password. Please check the code and password requirements.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <main className="forgot-page">
-      <section className="forgot-card">
+    <div
+      style={{
+        padding: "40px",
+        maxWidth: "400px",
+        margin: "0 auto",
+      }}
+    >
+      <h1>Forgot Password</h1>
 
-        <div className="forgot-brand">
-          <svg
-            className="forgot-logo"
-            viewBox="0 0 64 64"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="FitPlan logo"
-          >
-            <path
-              fill="#2563EB"
-              d="M13 7h39c5 0 7 3 6 7l-1 3c-1 4-4 6-8 6H11c-3 0-5-3-4-6l1-4c1-4 2-6 5-6Z"
-            />
-
-            <path
-              fill="#14B8A6"
-              d="M11 25h31c5 0 7 3 6 7l-1 3c-1 4-4 6-8 6H9l2-16Z"
-            />
-
-            <path
-              fill="#2563EB"
-              d="M9 25h15l-5 28c-1 5-4 8-9 8H5L9 25Z"
-            />
-          </svg>
-
-          <span>FitPlan</span>
-        </div>
-
-        <div className="forgot-heading">
-          <h1>Forgot Password?</h1>
-
+      {!codeSent ? (
+        <form onSubmit={handleSendCode}>
           <p>
-            No worries! Enter your email address and we'll send you
-            instructions to reset your password.
+            Enter your email address and we'll send you a verification code.
           </p>
-        </div>
 
-        <form className="forgot-form">
-          <div className="forgot-field">
+          <div style={{ marginBottom: "16px" }}>
             <label htmlFor="email">Email</label>
 
             <input
               id="email"
               type="email"
-              placeholder="Enter your email"
-              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px",
+                marginTop: "6px",
+                color: "#111827",
+                backgroundColor: "#ffffff",
+              }}
             />
           </div>
 
-          <button type="button" className="forgot-button">
-            Send Reset Link
+          {error && (
+            <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>
+          )}
+
+          {message && (
+            <p style={{ color: "green", marginBottom: "16px" }}>{message}</p>
+          )}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Sending..." : "Send Verification Code"}
           </button>
         </form>
+      ) : (
+        <form onSubmit={handleResetPassword}>
+          <p>
+            Enter the verification code sent to <strong>{email}</strong>.
+          </p>
 
-        <a href="/login" className="back-login">
-          ← Back to Sign In
-        </a>
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="code">Verification Code</label>
 
-      </section>
-    </main>
+            <input
+              id="code"
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter code"
+              required
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px",
+                marginTop: "6px",
+                color: "#111827",
+                backgroundColor: "#ffffff",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="newPassword">New Password</label>
+
+            <input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="New password"
+              required
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px",
+                marginTop: "6px",
+                color: "#111827",
+                backgroundColor: "#ffffff",
+              }}
+            />
+          </div>
+
+          <div style={{ marginBottom: "16px" }}>
+            <label htmlFor="confirmPassword">Confirm Password</label>
+
+            <input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm new password"
+              required
+              style={{
+                display: "block",
+                width: "100%",
+                padding: "10px",
+                marginTop: "6px",
+                color: "#111827",
+                backgroundColor: "#ffffff",
+              }}
+            />
+          </div>
+
+          {error && (
+            <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>
+          )}
+
+          {message && (
+            <p style={{ color: "green", marginBottom: "16px" }}>{message}</p>
+          )}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Changing Password..." : "Change Password"}
+          </button>
+        </form>
+      )}
+
+      <p style={{ marginTop: "20px" }}>
+        Remember your password? <Link to="/login">Back to Login</Link>
+      </p>
+    </div>
   );
 }
