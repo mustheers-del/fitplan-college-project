@@ -54,10 +54,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
-      # Warn-mode for now: 43 existing findings, all style and Python-version
+      # working-directory is explicit because the job-wide default was removed
+      # in 0f3888f so pytest could run from the repo root. Without this line
+      # ruff would scan frontend/ and scripts/ too.
+      #
+      # Warn-mode for now: 43 findings in backend/, all style and Python-version
       # modernisation, none of them bugs. Flip to blocking once the sweep is
       # agreed and done.
       - name: Lint (ruff)
+        working-directory: backend
         run: ruff check .
         continue-on-error: true
 
