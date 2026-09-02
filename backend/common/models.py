@@ -1,7 +1,7 @@
 """
 Pydantic models — the contract between the AI layer, the API and the frontend.
 
-OWNER: [B]  ·  Reviewed by [M] before anything else is built on top.
+OWNER: Ankush  ·  Reviewed by Mushteer before anything else is built on top.
 
 These models do double duty:
   1. Validate incoming API request bodies
@@ -16,7 +16,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # --------------------------------------------------------------------------
 # Enums (as Literals — they serialise into the JSON schema the LLM sees)
@@ -74,7 +74,12 @@ class UserProfile(BaseModel):
 class WorkoutExercise(BaseModel):
     name: str = Field(min_length=2, max_length=80)
     sets: int = Field(ge=1, le=10)
-    reps: str = Field(description="e.g. '8-12' or '30 sec' for timed holds")
+    reps: str = Field(
+        min_length=1,
+        max_length=20,
+        pattern=r"^(\d{1,2}(-\d{1,2})?|\d{1,3}\s?(sec|min))$",
+        description="e.g. '8-12', '10', or '30 sec' for timed holds",
+    )
     rest_seconds: int = Field(default=60, ge=15, le=300, alias="restSeconds")
     notes: Optional[str] = Field(default=None, max_length=200)
     target_muscle: Optional[str] = Field(default=None, alias="targetMuscle")
@@ -99,6 +104,14 @@ class WorkoutDay(BaseModel):
             raise ValueError("more than 10 exercises in one session is not a realistic plan")
         return v
 
+    @model_validator(mode="after")
+    def _rest_day_consistency(self):
+        if self.is_rest_day and self.exercises:
+            raise ValueError("a rest day must have no exercises")
+        if not self.is_rest_day and not self.exercises:
+            raise ValueError("a training day must have at least one exercise")
+        return self
+
 
 class Meal(BaseModel):
     name: str = Field(min_length=2, max_length=100)
@@ -112,14 +125,30 @@ class Meal(BaseModel):
 
     model_config = {"populate_by_name": True, "extra": "allow"}
 
+    @model_validator(mode="after")
+    def _macros_match_calories(self):
+        computed = self.protein_g * 4 + self.carbs_g * 4 + self.fats_g * 9
+        if self.calories > 0 and abs(computed - self.calories) > self.calories * 0.20:
+            raise ValueError(f"macros imply {computed:.0f} kcal but calories says {self.calories}")
+        return self
+
 
 class MealDay(BaseModel):
     day: int = Field(ge=1, le=7)
-    meals: list[Meal]
+    meals: list[Meal] = Field(min_length=2, max_length=6)
     total_calories: int = Field(ge=0, le=8000, alias="totalCalories")
     total_protein_g: float = Field(ge=0, le=500, alias="totalProteinG")
 
     model_config = {"populate_by_name": True, "extra": "allow"}
+
+    @model_validator(mode="after")
+    def _totals_match_meals(self):
+        computed = sum(m.calories for m in self.meals)
+        if abs(computed - self.total_calories) > max(computed * 0.05, 50):
+            raise ValueError(
+                f"meals sum to {computed} kcal but totalCalories says {self.total_calories}"
+            )
+        return self
 
 
 class WeeklyPlan(BaseModel):
@@ -149,6 +178,13 @@ class WeeklyPlan(BaseModel):
         days = sorted(d.day for d in v)
         if days != list(range(1, 8)):
             raise ValueError(f"days must be 1..7 with no duplicates, got {days}")
+        return v
+
+    @field_validator("week_start_date")
+    @classmethod
+    def _must_be_monday(cls, v: date) -> date:
+        if v.weekday() != 0:
+            raise ValueError(f"week must start on a Monday, got {v:%A}")
         return v
 
 

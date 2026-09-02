@@ -257,12 +257,19 @@ def check_calories(
         return failures
 
     for day in plan.meal_plan:
-        difference = abs(day.total_calories - profile.calorie_target)
+        difference = day.total_calories - profile.calorie_target
 
-        if difference > 100:
+        if abs(difference) > 100:
+            if difference < 0:
+                correction = f"increase by about {abs(difference)} kcal"
+            else:
+                correction = f"decrease by about {difference} kcal"
+
             failures.append(
                 f"day {day.day}: {day.total_calories} kcal vs target "
-                f"{profile.calorie_target} (must be within +/-100)"
+                f"{profile.calorie_target} "
+                f"(difference {difference:+d}; {correction}; "
+                f"must be within +/-100 kcal)"
             )
 
     return failures

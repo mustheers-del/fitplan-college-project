@@ -196,6 +196,50 @@ def test_invoke_structured_retries_on_business_rule_failure(monkeypatch):
     assert "expected 3 training days" in retry_content.lower()
 
 
+
+def test_invoke_structured_retry_includes_numeric_calorie_feedback(monkeypatch):
+    profile = make_profile(calorieTarget=2000)
+    calls = []
+
+    bad_plan = valid_plan()
+
+    # Make every day 1420 kcal so the calorie validator fails.
+    for day in bad_plan["mealPlan"]:
+        day["totalCalories"] = 1420
+
+    good_plan = valid_plan()
+
+    responses = [
+        ai.AIResult(json.dumps(bad_plan), 10, 20),
+        ai.AIResult(json.dumps(good_plan), 11, 21),
+    ]
+
+    def fake_invoke(*args, **kwargs):
+        calls.append({"args": args, "kwargs": kwargs})
+        return responses.pop(0)
+
+    monkeypatch.setattr(ai, "_invoke", fake_invoke)
+
+    from common.models import WeeklyPlan
+
+    model, returned, source = ai.invoke_structured(
+        system="system",
+        user_content="user",
+        model_cls=WeeklyPlan,
+        profile=profile,
+    )
+
+    assert model is not None
+    assert returned.prompt_tokens == 11
+    assert source == "llm_retry"
+    assert len(calls) == 2
+
+    retry_content = calls[1]["args"][1][0]["content"]
+
+    assert "1420 kcal vs target 2000" in retry_content
+    assert "difference -580" in retry_content
+    assert "increase by about 580 kcal" in retry_content
+
 def test_invoke_structured_does_not_require_profile_for_generic_models(monkeypatch):
     class TinyModel(__import__("pydantic").BaseModel):
         value: int
