@@ -27,7 +27,7 @@ API_ROUTES = [
 
 
 def test_template_declares_all_functions():
-    text = Path("backend/template.yaml").read_text()
+    text = (Path(__file__).resolve().parents[2] / "backend" / "template.yaml").read_text()
 
     missing = [
         resource
@@ -39,7 +39,7 @@ def test_template_declares_all_functions():
 
 
 def test_frontend_api_routes_exist_in_template():
-    text = Path("backend/template.yaml").read_text()
+    text = (Path(__file__).resolve().parents[2] / "backend" / "template.yaml").read_text()
 
     missing = []
 

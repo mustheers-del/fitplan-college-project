@@ -16,6 +16,7 @@ export default function Onboarding() {
     daysPerWeek: "3",
     equipment: "bodyweight",
     mealPref: "omnivore",
+    injuries: [] as string[],
   });
 
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,15 @@ export default function Onboarding() {
     setForm((current) => ({
       ...current,
       [field]: value,
+    }));
+  };
+
+  const toggleInjury = (injury: string) => {
+    setForm((current) => ({
+      ...current,
+      injuries: current.injuries.includes(injury)
+        ? current.injuries.filter((item) => item !== injury)
+        : [...current.injuries, injury],
     }));
   };
 
@@ -62,6 +72,7 @@ export default function Onboarding() {
           | "vegan"
           | "eggetarian"
           | "pescatarian",
+        injuries: form.injuries,
       });
 
       await api.generatePlan();
@@ -197,6 +208,43 @@ export default function Onboarding() {
             placeholder="bodyweight, dumbbells"
           />
           <small>Separate multiple items with commas.</small>
+        </div>
+
+        <div>
+          <label>Injuries</label>
+
+          <div>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.injuries.includes("knee")}
+                onChange={() => toggleInjury("knee")}
+              />
+              Knee
+            </label>
+          </div>
+
+          <div>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.injuries.includes("shoulder")}
+                onChange={() => toggleInjury("shoulder")}
+              />
+              Shoulder
+            </label>
+          </div>
+
+          <div>
+            <label>
+              <input
+                type="checkbox"
+                checked={form.injuries.includes("lower_back")}
+                onChange={() => toggleInjury("lower_back")}
+              />
+              Lower back
+            </label>
+          </div>
         </div>
 
         <div>

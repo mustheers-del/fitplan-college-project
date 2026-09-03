@@ -19,7 +19,7 @@ pip install \
   --only-binary=:all: \
   --target "$LAYER/python" \
   --upgrade \
-  pydantic
+  pydantic==2.13.4
 
 # Remove caches and compiled Python files
 find "$LAYER" -name '__pycache__' -type d -prune -exec rm -rf {} + 2>/dev/null || true
@@ -30,7 +30,7 @@ git rev-parse --short HEAD > "$LAYER/python/common/BUILD_STAMP" 2>/dev/null || \
   echo "dirty" > "$LAYER/python/common/BUILD_STAMP"
 
 # Create the Lambda layer zip
-powershell.exe -Command "Compress-Archive -Path 'backend/layer/python' -DestinationPath 'backend/common-layer.zip' -Force"
+python -c "import os, zipfile; root='backend/layer'; z=zipfile.ZipFile('backend/common-layer.zip','w',zipfile.ZIP_DEFLATED); [z.write(os.path.join(d,f),os.path.relpath(os.path.join(d,f),root).replace(os.sep,'/')) for d,_,fs in os.walk(root) for f in fs]; z.close()"
 
 echo "--- layer contents check ---"
 
@@ -41,9 +41,9 @@ $names=$z.Entries.FullName
 $z.Dispose()
 
 $required=@(
-  "python\common\openrouter.py",
-  "python\common\plans.py",
-  "python\common\BUILD_STAMP"
+  "python/common/openrouter.py",
+  "python/common/plans.py",
+  "python/common/BUILD_STAMP"
 )
 
 foreach ($file in $required) {
