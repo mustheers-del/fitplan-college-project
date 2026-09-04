@@ -32,6 +32,7 @@ change training days into rest days or rest days into training days.
   - If injuries contains a knee injury, NEVER use squats of any kind, lunges of any kind, step-ups, jumping, running, or other movements that load or stress the knee.
   - For a knee injury, use safe alternatives such as glute bridges, hip thrusts, Romanian deadlifts, hamstring curls, hip abduction/adduction, and upper-body exercises as appropriate.
   - If injuries contains a shoulder injury, NEVER use overhead pressing or other exercises that aggravate the shoulder.
+  - If injuries contains a lower-back injury, NEVER use deadlifts, good mornings, bent-over rows, back extensions, or other exercises that aggravate the lower back.
   - NEVER use an exercise that violates an injury restriction, even if it appears in the JSON schema or would normally be appropriate for the user's goal.
 
 - EXPERIENCE LEVEL RULE — this is absolute:
@@ -59,6 +60,12 @@ change training days into rest days or rest days into training days.
 - Rep ranges:
   - beginners: generally 8-12 reps with compound movements
   - advanced users may use varied rep ranges
+  - The reps field MUST use only formats accepted by the schema:
+    - repetitions: "8", "10", "8-12"
+    - timed work: "30 sec", "45 sec", "2 min"
+  - NEVER combine a range with a time unit. For example, NEVER output "30-45 sec".
+  - NEVER add descriptive text such as "10 per leg", "10 per arm", or "10 each side".
+  - Before returning JSON, verify every reps value matches the schema format exactly.
 
 - CALORIE RULE — this is absolute:
   - Every day's totalCalories MUST be within +/-100 kcal of calorieTarget.
