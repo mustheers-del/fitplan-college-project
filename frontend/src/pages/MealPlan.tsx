@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Card, PageHeader, LoadingSkeleton, EmptyState } from "../components";
+import {
+  Card,
+  PageHeader,
+  LoadingSkeleton,
+  EmptyState,
+  StatTile,
+} from "../components";
 import { api } from "../api/client";
 import type { WeeklyPlan } from "../types/api";
 
@@ -32,8 +38,8 @@ export default function MealPlan() {
     );
   }
 
-  // 2. error — must be separate from empty, or a failed request tells the
-  //    user they have no plan when they do
+  // 2. error — separate from empty. A failed request must not tell the user
+  //    they have no plan when they do.
   if (error) {
     return (
       <>
@@ -63,6 +69,17 @@ export default function MealPlan() {
     );
   }
 
+  // The page shows the whole week, so a single day's figure has no context.
+  // These are weekly averages, and the labels say so.
+  const days = plan.mealPlan;
+  const avg = (total: number) => Math.round(total / days.length);
+
+  const avgCalories = avg(days.reduce((sum, d) => sum + d.totalCalories, 0));
+  const avgProtein = avg(days.reduce((sum, d) => sum + d.totalProteinG, 0));
+  const avgMeals = avg(
+    days.reduce((sum, d) => sum + (d.meals?.length ?? 0), 0),
+  );
+
   // 4. real content
   return (
     <>
@@ -76,22 +93,13 @@ export default function MealPlan() {
           marginBottom: "var(--space-6)",
         }}
       >
-        <Card title="Daily Calories">
-          <h2>{plan.mealPlan[0]?.totalCalories ?? 0}</h2>
-          <p>kcal</p>
-        </Card>
-        <Card title="Daily Protein">
-          <h2>{plan.mealPlan[0]?.totalProteinG ?? 0}g</h2>
-          <p>protein</p>
-        </Card>
-        <Card title="Meals">
-          <h2>{plan.mealPlan[0]?.meals?.length ?? 0}</h2>
-          <p>per day</p>
-        </Card>
+        <StatTile label="Avg daily calories" value={avgCalories} unit="kcal" />
+        <StatTile label="Avg daily protein" value={avgProtein} unit="g" />
+        <StatTile label="Meals per day" value={avgMeals} />
       </div>
 
       <div style={{ display: "grid", gap: "var(--space-5)" }}>
-        {plan.mealPlan.map((day) => (
+        {days.map((day) => (
           <Card key={day.day} title={`Day ${day.day}`}>
             <p
               style={{
