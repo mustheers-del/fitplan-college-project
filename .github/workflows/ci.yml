@@ -54,6 +54,18 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      # working-directory is explicit because the job-wide default was removed
+      # in 0f3888f so pytest could run from the repo root. Without this line
+      # ruff would scan frontend/ and scripts/ too.
+      #
+      # Warn-mode for now: 43 findings in backend/, all style and Python-version
+      # modernisation, none of them bugs. Flip to blocking once the sweep is
+      # agreed and done.
+      - name: Lint (ruff)
+        working-directory: backend
+        run: ruff check .
+        continue-on-error: true
+
       - name: Run tests
         run: pytest -q
 
@@ -70,8 +82,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Pinned so CI and local agree - an unpinned lint tool silently changes
+      # its ruleset between runs.
       - name: Install cfn-lint
-        run: pip install cfn-lint
+        run: pip install cfn-lint==1.55.1
 
       - name: Lint SAM template
         run: cfn-lint backend/template.yaml
