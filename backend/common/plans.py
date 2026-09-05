@@ -76,7 +76,7 @@ def generate_plan_for_user(
             system=PLAN_SYSTEM_PROMPT,
             user_content=user_prompt,
             model_cls=WeeklyPlan,
-            max_tokens=4000,
+            max_tokens=8000,
             temperature=0.4,
             profile=profile,
         )
