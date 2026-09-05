@@ -75,7 +75,6 @@ export default function Onboarding() {
         injuries: form.injuries,
       });
 
-      await api.generatePlan();
 
       navigate("/dashboard");
     } catch (err) {

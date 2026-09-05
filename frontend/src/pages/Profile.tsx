@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AppShell,
   Card,
@@ -9,7 +10,14 @@ import {
 import { api } from "../api/client";
 import type { UserProfile } from "../types/api";
 
+const INJURY_OPTIONS = [
+  { value: "knee", label: "Knee" },
+  { value: "shoulder", label: "Shoulder" },
+  { value: "lower_back", label: "Lower Back" },
+];
+
 export default function Profile() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -20,7 +28,10 @@ export default function Profile() {
       try {
         setIsLoading(true);
         const response = await api.getProfile();
-        setProfile(response.profile);
+        setProfile({
+          ...response.profile,
+          injuries: response.profile.injuries ?? [],
+        });
       } catch (err) {
         console.error("Failed to load profile:", err);
         setMessage("Unable to load your profile.");
@@ -39,12 +50,21 @@ export default function Profile() {
       setIsSaving(true);
       setMessage("");
 
-      const response = await api.updateProfile(profile);
-      setProfile(response.profile);
-      setMessage("Profile updated successfully.");
-    } catch (err) {
-      console.error("Failed to update profile:", err);
-      setMessage("Could not update your profile.");
+      try {
+        const response = await api.updateProfile(profile);
+        setProfile(response.profile);
+      } catch (err) {
+        console.error("Profile update failed:", err);
+        setMessage(
+          `Profile update failed: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+        return;
+      }
+
+      setMessage("Profile saved.");
+      navigate("/dashboard", { replace: true });
     } finally {
       setIsSaving(false);
     }
@@ -57,6 +77,21 @@ export default function Profile() {
     setProfile((current) =>
       current ? { ...current, [field]: value } : current,
     );
+  }
+
+  function toggleInjury(injury: string) {
+    setProfile((current) => {
+      if (!current) return current;
+
+      const injuries = current.injuries ?? [];
+
+      return {
+        ...current,
+        injuries: injuries.includes(injury)
+          ? injuries.filter((item) => item !== injury)
+          : [...injuries, injury],
+      };
+    });
   }
 
   if (isLoading) {
@@ -90,7 +125,7 @@ export default function Profile() {
     <AppShell active="/profile">
       <PageHeader
         title="Profile"
-        subtitle="View and update your fitness preferences"
+        subtitle="Update your fitness details"
       />
 
       <Card title="Personal Information">
@@ -106,9 +141,7 @@ export default function Profile() {
             <input
               type="number"
               value={profile.age}
-              onChange={(e) =>
-                updateField("age", Number(e.target.value))
-              }
+              onChange={(e) => updateField("age", Number(e.target.value))}
               style={{ width: "100%", marginTop: "var(--space-2)" }}
             />
           </label>
@@ -230,24 +263,47 @@ export default function Profile() {
             />
           </label>
         </div>
+      </Card>
 
-        {message && (
-          <p
-            style={{
-              marginTop: "var(--space-4)",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            {message}
-          </p>
-        )}
-
-        <div style={{ marginTop: "var(--space-4)" }}>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Saving..." : "Save Changes"}
-          </Button>
+      <Card title="Injuries">
+        <div style={{ display: "grid", gap: "var(--space-3)" }}>
+          {INJURY_OPTIONS.map((injury) => (
+            <label
+              key={injury.value}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                cursor: "pointer",
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={(profile.injuries ?? []).includes(injury.value)}
+                onChange={() => toggleInjury(injury.value)}
+              />
+              {injury.label}
+            </label>
+          ))}
         </div>
       </Card>
+
+      {message && (
+        <p
+          style={{
+            marginTop: "var(--space-4)",
+            color: "var(--c-danger)",
+          }}
+        >
+          {message}
+        </p>
+      )}
+
+      <div style={{ marginTop: "var(--space-4)" }}>
+        <Button onClick={handleSave} disabled={isSaving}>
+          {isSaving ? "Saving..." : "Save Changes"}
+        </Button>
+      </div>
     </AppShell>
   );
 }
