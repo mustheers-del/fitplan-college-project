@@ -1,3 +1,4 @@
+
 """
 AI provider selector and structured-output handling.
 
@@ -164,7 +165,132 @@ def _validation_summary(
                 f"{direction}"
             )
 
+    # Add explicit meal-level macro/calorie feedback.
+    #
+    # Example validation error:
+    # mealPlan.0.meals.1  macros imply 842 kcal but calories says 1080
+    #
+    # The retry model needs the actual numbers, otherwise it may simply
+    # repeat the same mistake.
+    meal_matches = re.findall(
+        r"(mealPlan\.\d+\.meals\.\d+).*?"
+        r"macros imply\s+(\d+(?:\.\d+)?)\s+kcal"
+        r"\s+but calories says\s+(\d+(?:\.\d+)?)",
+        summary,
+        flags=re.IGNORECASE,
+    )
+
+    if meal_matches:
+        feedback_lines = [
+            "\n\nMEAL MACRO FEEDBACK:"
+        ]
+
+        for path, implied, declared in meal_matches:
+            feedback_lines.append(
+                f"- {path}: macros imply {implied} kcal, "
+                f"but calories says {declared} kcal."
+            )
+            feedback_lines.append(
+                f"  Recalculate the meal so proteinG x 4 + carbsG x 4 "
+                f"+ fatsG x 9 matches the calories field, while keeping "
+                f"the meal close to its assigned calorie budget."
+            )
+
+        feedback_lines.append(
+            "Do not leave any meal with conflicting macro and calorie values."
+        )
+
+        summary += "\n".join(feedback_lines)
+
     return summary
+
+
+def _repair_meal_macros(parsed):
+    """Repair macro values so they mathematically match declared calories."""
+
+    if not isinstance(parsed, dict):
+        return parsed
+
+    meal_plan = parsed.get("mealPlan")
+    if not isinstance(meal_plan, list):
+        return parsed
+
+    for day in meal_plan:
+        if not isinstance(day, dict):
+            continue
+
+        meals = day.get("meals")
+        if not isinstance(meals, list):
+            continue
+
+        for meal in meals:
+            if not isinstance(meal, dict):
+                continue
+
+            try:
+                calories = float(meal.get("calories", 0))
+                protein = float(meal.get("proteinG", 0))
+                carbs = float(meal.get("carbsG", 0))
+                fats = float(meal.get("fatsG", 0))
+            except (TypeError, ValueError):
+                continue
+
+            if calories <= 0:
+                continue
+
+            computed = protein * 4 + carbs * 4 + fats * 9
+
+            if computed <= 0:
+                continue
+
+            if abs(computed - calories) > calories * 0.20:
+                scale = calories / computed
+                meal["proteinG"] = round(protein * scale, 1)
+                meal["carbsG"] = round(carbs * scale, 1)
+                meal["fatsG"] = round(fats * scale, 1)
+
+    return parsed
+
+
+def _repair_reps(parsed):
+    """Normalize common AI-generated reps formats before schema validation."""
+
+    if not isinstance(parsed, dict):
+        return parsed
+
+    workout_plan = parsed.get("workoutPlan")
+    if not isinstance(workout_plan, list):
+        return parsed
+
+    for day in workout_plan:
+        if not isinstance(day, dict):
+            continue
+
+        exercises = day.get("exercises")
+        if not isinstance(exercises, list):
+            continue
+
+        for exercise in exercises:
+            if not isinstance(exercise, dict):
+                continue
+
+            reps = exercise.get("reps")
+            if not isinstance(reps, str):
+                continue
+
+            value = reps.strip().lower()
+
+            # Remove common side/limb descriptions.
+            value = re.sub(
+                r"\s+(per|each)\s+(leg|arm|side)\s*$",
+                "",
+                value,
+                flags=re.IGNORECASE,
+            )
+
+            exercise["reps"] = value
+
+    return parsed
 
 
 def invoke_structured(
@@ -212,6 +338,8 @@ def invoke_structured(
 
     try:
         parsed = extract_json(first.text)
+        parsed = _repair_meal_macros(parsed)
+        parsed = _repair_reps(parsed)
 
         model = model_cls.model_validate(parsed)
 
@@ -284,12 +412,17 @@ STRICT REQUIREMENTS:
 18. Total preparation time for each day must not exceed cookingTime.
 19. Every day's totalCalories MUST be within +/-100 kcal of calorieTarget.
 20. Do not intentionally undershoot or overshoot the calorie target.
-21. Before returning JSON, check EVERY exercise against experience,
+21. For every meal, calculate calories from macros as:
+    proteinG x 4 + carbsG x 4 + fatsG x 9.
+    The calories field MUST match that calculation within the schema
+    tolerance. NEVER output a calories value that conflicts with the macros.
+22. Before returning JSON, check EVERY exercise against experience,
     injury, and equipment restrictions.
-22. Before returning JSON, check EVERY meal against diet and allergy rules.
-23. Before returning JSON, check EVERY day's calories against calorieTarget.
-24. Make sure the JSON is COMPLETE and ends with the final closing brace.
-25. Never stop halfway through workoutPlan or mealPlan.
+23. Before returning JSON, check EVERY meal against diet and allergy rules.
+24. Before returning JSON, check EVERY day's calories against calorieTarget.
+25. Make sure the JSON is COMPLETE and ends with the final closing brace.
+26. Never stop halfway through workoutPlan or mealPlan.
+
 ORIGINAL USER REQUEST:
 
 {user_content}
@@ -320,6 +453,8 @@ ORIGINAL USER REQUEST:
 
     try:
         parsed = extract_json(second.text)
+        parsed = _repair_meal_macros(parsed)
+        parsed = _repair_reps(parsed)
 
         model = model_cls.model_validate(parsed)
 
@@ -375,3 +510,4 @@ def model_id() -> str:
     raise ValueError(
         f"Unknown AI_PROVIDER: {provider!r}"
     )
+
