@@ -67,7 +67,7 @@ jobs:
         continue-on-error: true
 
       - name: Run tests
-        run: pytest -q
+        run: pytest -q --import-mode=importlib
 
   template:
     name: SAM Template Lint
