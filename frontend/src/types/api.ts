@@ -210,3 +210,11 @@ export interface ParsedWeek {
   days: ParsedDay[];
   summary: AdherenceSummary;
 }
+
+export interface CoachMessageIn {
+  message: string;
+}
+
+export interface CoachMessageOut {
+  reply: string;
+}

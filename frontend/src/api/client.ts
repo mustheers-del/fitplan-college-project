@@ -7,7 +7,13 @@
  */
 
 import { fetchAuthSession } from "aws-amplify/auth";
-import type { ApiError, DailyLog, UserProfile, WeeklyPlan } from "@/types/api";
+import type {
+  ApiError,
+  CoachMessageOut,
+  DailyLog,
+  UserProfile,
+  WeeklyPlan,
+} from "@/types/api";
 
 const BASE_URL = import.meta.env.VITE_API_URL as string;
 
@@ -85,6 +91,13 @@ export const api = {
     request<{ plan: WeeklyPlan }>("/plan/generate", {
       method: "POST",
       body: JSON.stringify(opts),
+    }),
+    
+  // --- AI Coach ---
+  coachMessage: (message: string) =>
+    request<CoachMessageOut>("/coach/message", {
+      method: "POST",
+      body: JSON.stringify({ message }),
     }),
 
   // --- daily logs  ([C] backend) ---

@@ -6,6 +6,7 @@ const AppShellContext = createContext(false);
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/dashboard" },
+  { label: "AI Coach", href: "/coach" },
   { label: "Workout", href: "/workout" },
   { label: "Meal Plan", href: "/meals" },
   { label: "Daily Logs", href: "/logs" },

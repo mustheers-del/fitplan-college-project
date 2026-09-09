@@ -16,6 +16,7 @@ import Calendar from "./pages/Calendar";
 import Achievements from "./pages/Achievements";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import Coach from "./pages/Coach";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
 
         <Route element={<AppShell />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/coach" element={<Coach />} />
           <Route path="/workout" element={<WorkoutDetails />} />
           <Route path="/meals" element={<MealPlan />} />
           <Route path="/logs" element={<DailyLogs />} />
