@@ -89,7 +89,7 @@ Create a simple recipe for this meal.
             temperature=0.3,
         )
 
-        recipe = json.loads(result.text.strip())
+        recipe = ai.extract_json(result.text)
 
         if not isinstance(recipe, dict):
             return auth.error("AI returned invalid recipe data", 502)
