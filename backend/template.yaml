@@ -274,8 +274,41 @@ Resources:
         Get:
           Type: HttpApi
           Properties: { ApiId: !Ref HttpApi, Path: /logs/daily, Method: GET }
-
-  # --- scheduled, unattended: needs a DLQ ---
+  CoachFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub fitplan-${Stage}-coach
+      CodeUri: functions/coach/
+      Handler: handler.lambda_handler
+      Timeout: 60
+      MemorySize: 512
+      Policies:
+        - DynamoDBReadPolicy: { TableName: !Ref MainTable }
+        - Statement:
+            - Effect: Allow
+              Action: [bedrock:InvokeModel]
+              Resource:
+                - !Sub arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
+                - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
+                - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
+        - Statement:
+            - Effect: Allow
+              Action: [ssm:GetParameter]
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+            - Effect: Allow
+              Action: [kms:Decrypt]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+      Events:
+        Post:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /coach/message
+            Method: POST
   WeeklyPlanGenFunction:
     Type: AWS::Serverless::Function
     Properties:
