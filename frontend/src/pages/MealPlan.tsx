@@ -7,12 +7,21 @@ import {
   StatTile,
 } from "../components";
 import { api } from "../api/client";
-import type { WeeklyPlan } from "../types/api";
+import type { WeeklyPlan, Meal } from "../types/api";
+
+type Recipe = {
+  name: string;
+  ingredients: string[];
+  steps: string[];
+  prepMinutes: number;
+};
 
 export default function MealPlan() {
   const [plan, setPlan] = useState<WeeklyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [recipeLoading, setRecipeLoading] = useState<string | null>(null);
+  const [recipes, setRecipes] = useState<Record<string, Recipe>>({});
 
   useEffect(() => {
     api
@@ -26,7 +35,6 @@ export default function MealPlan() {
     <PageHeader title="Meal Plan" subtitle="Your personalised nutrition plan" />
   );
 
-  // 1. loading
   if (loading) {
     return (
       <>
@@ -38,8 +46,6 @@ export default function MealPlan() {
     );
   }
 
-  // 2. error â€” separate from empty. A failed request must not tell the user
-  //    they have no plan when they do.
   if (error) {
     return (
       <>
@@ -54,7 +60,6 @@ export default function MealPlan() {
     );
   }
 
-  // 3. empty
   if (!plan?.mealPlan?.length) {
     return (
       <>
@@ -69,8 +74,6 @@ export default function MealPlan() {
     );
   }
 
-  // The page shows the whole week, so a single day's figure has no context.
-  // These are weekly averages, and the labels say so.
   const days = plan.mealPlan;
   const avg = (total: number) => Math.round(total / days.length);
 
@@ -80,7 +83,19 @@ export default function MealPlan() {
     days.reduce((sum, d) => sum + (d.meals?.length ?? 0), 0),
   );
 
-  // 4. real content
+  const handleRecipe = async (meal: Meal, key: string) => {
+    setRecipeLoading(key);
+
+    try {
+      const recipe = await api.generateRecipe(meal.name, meal.ingredients);
+      setRecipes((current) => ({ ...current, [key]: recipe }));
+    } catch {
+      alert("Could not generate recipe. Please try again.");
+    } finally {
+      setRecipeLoading(null);
+    }
+  };
+
   return (
     <>
       {header}
@@ -107,7 +122,7 @@ export default function MealPlan() {
                 marginBottom: "var(--space-4)",
               }}
             >
-              {day.totalCalories} kcal Â· {day.totalProteinG}g protein
+              {day.totalCalories} kcal · {day.totalProteinG}g protein
             </p>
 
             <div
@@ -117,29 +132,77 @@ export default function MealPlan() {
                 gap: "var(--space-4)",
               }}
             >
-              {(day.meals ?? []).map((meal) => (
-                <div
-                  key={`${day.day}-${meal.slot}-${meal.name}`}
-                  style={{
-                    padding: "var(--space-4)",
-                    border: "1px solid var(--color-border)",
-                    borderRadius: "var(--r-md)",
-                  }}
-                >
-                  <small
+              {(day.meals ?? []).map((meal) => {
+                const key = `${day.day}-${meal.slot}-${meal.name}`;
+                const recipe = recipes[key];
+                const isLoading = recipeLoading === key;
+
+                return (
+                  <div
+                    key={key}
                     style={{
-                      color: "var(--color-text-muted)",
-                      textTransform: "capitalize",
+                      padding: "var(--space-4)",
+                      border: "1px solid var(--color-border)",
+                      borderRadius: "var(--r-md)",
                     }}
                   >
-                    {meal.slot}
-                  </small>
-                  <h3 style={{ margin: "var(--space-2) 0" }}>{meal.name}</h3>
-                  <p style={{ color: "var(--color-text-muted)" }}>
-                    {meal.calories} kcal Â· {meal.proteinG}g protein
-                  </p>
-                </div>
-              ))}
+                    <small
+                      style={{
+                        color: "var(--color-text-muted)",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {meal.slot}
+                    </small>
+
+                    <h3 style={{ margin: "var(--space-2) 0" }}>
+                      {meal.name}
+                    </h3>
+
+                    <p style={{ color: "var(--color-text-muted)" }}>
+                      {meal.calories} kcal · {meal.proteinG}g protein
+                    </p>
+
+                    <button
+                      onClick={() => handleRecipe(meal, key)}
+                      disabled={isLoading}
+                      style={{
+                        marginTop: "var(--space-3)",
+                        padding: "8px 12px",
+                        border: "none",
+                        borderRadius: "var(--r-md)",
+                        cursor: isLoading ? "default" : "pointer",
+                      }}
+                    >
+                      {isLoading ? "Generating..." : "Get Recipe"}
+                    </button>
+
+                    {recipe && (
+                      <div style={{ marginTop: "var(--space-4)" }}>
+                        <h4>{recipe.name}</h4>
+
+                        <p>
+                          <strong>Prep time:</strong> {recipe.prepMinutes} min
+                        </p>
+
+                        <strong>Ingredients</strong>
+                        <ul>
+                          {recipe.ingredients.map((item, index) => (
+                            <li key={`${item}-${index}`}>{item}</li>
+                          ))}
+                        </ul>
+
+                        <strong>Steps</strong>
+                        <ol>
+                          {recipe.steps.map((step, index) => (
+                            <li key={`${step}-${index}`}>{step}</li>
+                          ))}
+                        </ol>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </Card>
         ))}

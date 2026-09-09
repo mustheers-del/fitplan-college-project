@@ -10,6 +10,7 @@ import { fetchAuthSession } from "aws-amplify/auth";
 import type {
   ApiError,
   CoachMessageOut,
+  RecipeGenerateOut,
   DailyLog,
   UserProfile,
   WeeklyPlan,
@@ -100,6 +101,13 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
 
+  // --- Recipes ---
+  generateRecipe: (mealName: string, ingredients: string[]) =>
+    request<RecipeGenerateOut>("/recipes/generate", {
+      method: "POST",
+      body: JSON.stringify({ mealName, ingredients }),
+    }),
+
   // --- daily logs  ([C] backend) ---
   logDaily: (entry: {
     date: string;
@@ -115,3 +123,7 @@ export const api = {
   getLogs: (range = "7d") =>
     request<{ logs: DailyLog[]; range: string }>(`/logs/daily?range=${range}`),
 };
+
+
+
+

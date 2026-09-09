@@ -218,3 +218,14 @@ export interface CoachMessageIn {
 export interface CoachMessageOut {
   reply: string;
 }
+export interface RecipeGenerateIn {
+  mealName: string;
+  ingredients: string[];
+}
+
+export interface RecipeGenerateOut {
+  name: string;
+  ingredients: string[];
+  steps: string[];
+  prepMinutes: number;
+}
