@@ -67,6 +67,8 @@ jobs:
         continue-on-error: true
 
       - name: Run tests
+        env:
+          PYTHONPATH: backend
         run: pytest -q --import-mode=importlib
 
   template:
