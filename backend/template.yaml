@@ -368,12 +368,17 @@ Resources:
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.anthropic.claude-haiku-4-5*
                 - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-lite*
                 - !Sub arn:aws:bedrock:*:${AWS::AccountId}:inference-profile/us.amazon.nova-lite*
-        # NOTE (Parshuram): this function calls the AI too, so when it moves to
-        # OpenRouter it will need the same ssm:GetParameter + kms:Decrypt block
-        # that GeneratePlanFunction has above. Harmless today - the schedule is
-        # DISABLED and the handler has no code yet - but whoever enables it in
-        # Sprint 6 hits an AccessDenied on the first parameter read. Left out
-        # deliberately pending Mustheer's call, not an oversight.
+        - Statement:
+            - Effect: Allow
+              Action: [ssm:GetParameter]
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+            - Effect: Allow
+              Action: [kms:Decrypt]
+              Resource: "*"
+              Condition:
+                StringEquals:
+                  kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+        
       Events:
         WeeklySchedule:
           Type: ScheduleV2
@@ -381,7 +386,7 @@ Resources:
             # Mondays 02:00 UTC = 07:30 IST. Plan is ready before the user wakes.
             ScheduleExpression: cron(0 2 ? * MON *)
             Description: Regenerate weekly plans for all active users
-            State: DISABLED # Sprint 6: enable once weekly_plan_gen has code + fan-out guard
+            State: ENABLED 
 
   WeeklyDLQ:
     Type: AWS::SQS::Queue
