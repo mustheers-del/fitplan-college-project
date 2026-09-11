@@ -20,13 +20,14 @@ from common import dynamo, log_parser, logs, plans
 logging.getLogger().setLevel(logging.INFO)
 
 MAX_USERS_PER_RUN = int(os.environ.get("MAX_USERS_PER_RUN", "50"))
+TARGET_USER_ID = os.environ.get("TARGET_USER_ID")
 
 
 def lambda_handler(event, context):
     this_week = plans.current_week_start()
     last_week = (date.fromisoformat(this_week) - timedelta(days=7)).isoformat()
 
-    user_ids = _list_active_users()[:MAX_USERS_PER_RUN]
+    user_ids = [TARGET_USER_ID] if TARGET_USER_ID else _list_active_users()[:MAX_USERS_PER_RUN]
     logging.info("weekly run: week=%s users=%d", this_week, len(user_ids))
 
     succeeded, failed = 0, 0
@@ -72,3 +73,5 @@ def _list_active_users() -> list[str]:
         ProjectionExpression="PK",
     )
     return [i["PK"].removeprefix("USER#") for i in resp.get("Items", [])]
+
+
