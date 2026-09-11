@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from common import bedrock
+from common import ai
 from common.models import AdherenceSummary, ParsedWeek
 from common.prompts import PARSE_SYSTEM_PROMPT, build_parse_user_prompt
 
@@ -39,7 +39,7 @@ def parse_logs_batch(logs: list[dict], planned_sessions: int) -> Optional[Parsed
         return None
 
     try:
-        parsed, result, source = bedrock.invoke_structured(
+        parsed, result, source = ai.invoke_structured(
             system=PARSE_SYSTEM_PROMPT,
             user_content=build_parse_user_prompt(usable, planned_sessions),
             model_cls=ParsedWeek,
@@ -62,3 +62,4 @@ def empty_adherence(planned: int) -> ParsedWeek:
             avgAdherence=0.0, notes="No logs recorded this week.",
         ),
     )
+
