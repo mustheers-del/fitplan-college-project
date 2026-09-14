@@ -29,7 +29,7 @@ export default function Progress(){
     {logs.map(log=><div key={log.date} style={{padding:"16px",border:"1px solid var(--color-border)",borderRadius:"var(--r-md)"}}>
      <strong>{log.date}</strong>
      <p style={{color:"var(--color-text-muted)"}}>
-      {log.workoutText?"? Workout completed":"? No workout"} · {log.mealsText?"? Meals logged":"? No meals"}
+      {log.workoutText ? "Workout logged" : "No workout logged"} Â·{" "}{log.mealsText ? "Meals logged" : "No meals logged"}
      </p>
     </div>)}
    </div>}

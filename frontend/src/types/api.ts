@@ -15,7 +15,7 @@
  */
 
 // Python `date` and `datetime` serialise to ISO strings over JSON,
-// so they are `string` here — not Date objects.
+// so they are `string` here â€” not Date objects.
 
 export type Goal =
   | "lose_weight"
@@ -46,14 +46,14 @@ export type BudgetTier = "low" | "medium" | "high";
 export type GenerationSource = "llm" | "llm_retry" | "fallback";
 
 /**
- * Request shape — what the onboarding wizard SENDS.
+ * Request shape â€” what the onboarding wizard SENDS.
  * Fields with a backend default are optional; the backend fills them in.
- * Fields with no default are required — the backend can't invent them.
+ * Fields with no default are required â€” the backend can't invent them.
  *
  * Named to match the backend's DailyLogIn / DailyLog pattern.
  */
 export interface UserProfileIn {
-  // required — no default in models.py
+  // required â€” no default in models.py
   age: number;
   sex: Sex;
   heightCm: number;
@@ -63,7 +63,7 @@ export interface UserProfileIn {
   experience: Experience;
   daysPerWeek: number;
 
-  // optional — models.py supplies a default
+  // optional â€” models.py supplies a default
   split?: Split;
   equipment?: string[];
   injuries?: string[];
@@ -75,21 +75,21 @@ export interface UserProfileIn {
   supplements?: string[];
   budgetTier?: BudgetTier;
 
-  // optional and nullable — defaults to None in models.py
+  // optional and nullable â€” defaults to None in models.py
   calorieTarget?: number | null;
 }
 
 /**
- * Response shape — what GET /profile RETURNS.
+ * Response shape â€” what GET /profile RETURNS.
  * Every defaulted field is present, because the backend has filled it in.
  *
  * NOTE: this does NOT `extends UserProfileIn`, unlike DailyLog extends
  * DailyLogIn. There, the stored type only ADDS fields. Here the optionality
- * flips — fields that are optional on the way in are guaranteed on the way
- * out — and `extends` cannot turn an optional field into a required one.
+ * flips â€” fields that are optional on the way in are guaranteed on the way
+ * out â€” and `extends` cannot turn an optional field into a required one.
  * Written out explicitly so the difference is visible.
  *
- * Storage-only fields (PK, SK) are deliberately absent — never returned.
+ * Storage-only fields (PK, SK) are deliberately absent â€” never returned.
  */
 export interface UserProfile {
   age: number;
@@ -112,7 +112,7 @@ export interface UserProfile {
   budgetTier: BudgetTier;
   calorieTarget: number | null;
 
-  // set by the backend — pending confirmation from Ankush
+  // set by the backend â€” pending confirmation from Ankush
   createdAt: string;
   updatedAt: string;
 }
@@ -125,7 +125,7 @@ export interface WorkoutExercise {
   reps: string;
   restSeconds: number;
   notes: string | null;
-  targetMuscle: string | null;
+  targetMuscle: "chest" | "back" | "shoulders" | "biceps" | "triceps" | "core" | "glutes" | "quadriceps" | "hamstrings" | "calves" | null;
 }
 
 export interface WorkoutDay {
@@ -164,12 +164,12 @@ export interface WeeklyPlan {
   modelUsed: string | null;
   promptTokens: number | null;
   completionTokens: number | null;
-  /** "fallback" means AI generation failed — surface a "regenerate" nudge
+  /** "fallback" means AI generation failed â€” surface a "regenerate" nudge
    *  rather than silently showing a generic plan. */
   generationSource: GenerationSource;
 }
 
-/** Request shape — what the daily check-in POSTs. Raw text only. */
+/** Request shape â€” what the daily check-in POSTs. Raw text only. */
 export interface DailyLogIn {
   date: string;
   workoutText?: string;
@@ -177,7 +177,7 @@ export interface DailyLogIn {
   tags?: string[];
 }
 
-/** Response shape — what's stored and returned. */
+/** Response shape â€” what's stored and returned. */
 export interface DailyLog extends DailyLogIn {
   createdAt: string;
   parsed: boolean;
@@ -185,7 +185,7 @@ export interface DailyLog extends DailyLogIn {
   parsedMeals: Record<string, unknown> | null;
 }
 
-/** Frontend-only shape for API error responses — no counterpart in models.py. */
+/** Frontend-only shape for API error responses â€” no counterpart in models.py. */
 export interface ApiError {
   error: string;
   detail?: unknown;

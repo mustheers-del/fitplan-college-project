@@ -52,6 +52,12 @@ change training days into rest days or rest days into training days.
   - Do not use names such as "Tricep Dips (Bench/Chair)" or "Step-ups (Stairs or Bench)" when those objects are not available.
   - If an exercise requires equipment that is not available, choose a different equipment-free alternative targeting the same muscle group.
 
+- MUSCLE TARGET RULE - this is absolute:
+  - Every exercise MUST include a targetMuscle field.
+  - targetMuscle MUST be exactly one of: chest, back, shoulders, biceps, triceps, core, glutes, quadriceps, hamstrings, calves.
+  - targetMuscle must accurately describe the primary muscle group targeted by the exercise.
+  - Never invent other targetMuscle values.
+
 - Exercise count per session:
   - beginner: 3-5 exercises
   - intermediate: 4-6 exercises

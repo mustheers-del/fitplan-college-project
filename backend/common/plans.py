@@ -4,7 +4,7 @@ Plan generation business logic.
 OWNER: [M] Mustheer.
 
 This is the function the REST handler calls AND the function the MCP tool
-calls. That is the entire point of the shared-layer architecture — write it
+calls. That is the entire point of the shared-layer architecture â€” write it
 once here, wrap it twice.
 """
 
@@ -27,10 +27,52 @@ def current_week_start(today: Optional[date] = None) -> str:
     return (today - timedelta(days=today.weekday())).isoformat()
 
 
+_MUSCLE_BY_EXERCISE = {
+    "push-up": "chest",
+    "push-ups": "chest",
+    "wide-grip push-ups": "chest",
+    "pike push-up": "shoulders",
+    "pike push-ups": "shoulders",
+    "glute bridge": "glutes",
+    "glute bridges": "glutes",
+    "single-leg glute bridges": "glutes",
+    "hip thrust": "glutes",
+    "hip thrusts": "glutes",
+    "inverted row": "back",
+    "inverted rows (bodyweight)": "back",
+    "bodyweight row": "back",
+    "bodyweight rows (horizontal)": "back",
+    "reverse snow angels": "back",
+    "plank": "core",
+    "plank hold": "core",
+    "dead bug": "core",
+    "bird dog": "core",
+    "bodyweight squat": "quadriceps",
+}
+
+
+def _add_missing_muscle_targets(item: dict) -> dict:
+    """Add muscle targets to older plans that predate targetMuscle."""
+    workout_plan = item.get("workoutPlan", [])
+
+    for day in workout_plan:
+        for exercise in day.get("exercises", []):
+            if exercise.get("targetMuscle"):
+                continue
+
+            name = str(exercise.get("name", "")).strip().lower()
+            muscle = _MUSCLE_BY_EXERCISE.get(name)
+
+            if muscle:
+                exercise["targetMuscle"] = muscle
+
+    return item
+
+
 def get_plan(user_id: str, week_start: Optional[str] = None) -> Optional[WeeklyPlan]:
     week_start = week_start or current_week_start()
     item = dynamo.get_item(user_id, dynamo.sk_plan(week_start))
-    return WeeklyPlan.model_validate(item) if item else None
+    return WeeklyPlan.model_validate(_add_missing_muscle_targets(item)) if item else None
 
 
 def list_plan_weeks(user_id: str, limit: int = 20) -> list[str]:
@@ -83,7 +125,7 @@ def generate_plan_for_user(
         prompt_tokens, completion_tokens = result.prompt_tokens, result.completion_tokens
     except Exception:
         # Both attempts failed. A generic plan beats a 500 error.
-        log.exception("plan generation failed for %s — using fallback", user_id)
+        log.exception("plan generation failed for %s â€” using fallback", user_id)
         plan = _fallback_plan(profile, week_start)
         source, prompt_tokens, completion_tokens = "fallback", 0, 0
 
@@ -122,9 +164,9 @@ def _fallback_plan(profile: UserProfile, week_start: str) -> WeeklyPlan:
                 "day": d, "title": "Full Body Basics", "isRestDay": False,
                 "durationMin": 45, "estCalories": 300,
                 "exercises": [
-                    {"name": "Bodyweight Squat", "sets": 3, "reps": "12", "restSeconds": 60},
-                    {"name": "Push Up", "sets": 3, "reps": "8-12", "restSeconds": 60},
-                    {"name": "Plank", "sets": 3, "reps": "30 sec", "restSeconds": 45},
+                    {"name": "Bodyweight Squat", "sets": 3, "reps": "12", "restSeconds": 60, "targetMuscle": "quadriceps"},
+                    {"name": "Push Up", "sets": 3, "reps": "8-12", "restSeconds": 60, "targetMuscle": "chest"},
+                    {"name": "Plank", "sets": 3, "reps": "30 sec", "restSeconds": 45, "targetMuscle": "core"},
                 ],
             })
         else:
@@ -160,5 +202,5 @@ def _fallback_plan(profile: UserProfile, week_start: str) -> WeeklyPlan:
         "workoutPlan": workout,
         "mealPlan": meals,
         "coachNote": "We had trouble generating your personalised plan. "
-                     "Here's a solid starting template — regenerate any time.",
+                     "Here's a solid starting template â€” regenerate any time.",
     })

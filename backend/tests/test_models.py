@@ -131,3 +131,27 @@ def test_workout_exercise_rejects_invalid_reps():
 
     with pytest.raises(ValidationError):
         WorkoutExercise(name="Squat", sets=3, reps="many")
+def test_old_plan_exercises_get_missing_muscle_targets():
+    from common.plans import _add_missing_muscle_targets
+
+    item = {
+        "workoutPlan": [
+            {
+                "day": 1,
+                "exercises": [
+                    {"name": "Push-ups"},
+                    {"name": "Glute Bridges"},
+                    {"name": "Inverted Rows (Bodyweight)"},
+                    {"name": "Plank Hold"},
+                ],
+            }
+        ]
+    }
+
+    result = _add_missing_muscle_targets(item)
+    exercises = result["workoutPlan"][0]["exercises"]
+
+    assert exercises[0]["targetMuscle"] == "chest"
+    assert exercises[1]["targetMuscle"] == "glutes"
+    assert exercises[2]["targetMuscle"] == "back"
+    assert exercises[3]["targetMuscle"] == "core"

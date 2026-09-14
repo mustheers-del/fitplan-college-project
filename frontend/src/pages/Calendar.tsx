@@ -145,7 +145,7 @@ export default function Calendar() {
                   {log.workoutText
                     ? "Workout logged"
                     : "No workout logged"}{" "}
-                  Â·{" "}
+                  ·{" "}
                   {log.mealsText
                     ? "Meals logged"
                     : "No meals logged"}

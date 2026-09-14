@@ -1,7 +1,7 @@
 """
-Pydantic models — the contract between the AI layer, the API and the frontend.
+Pydantic models â€” the contract between the AI layer, the API and the frontend.
 
-OWNER: Ankush  ·  Reviewed by Mushteer before anything else is built on top.
+OWNER: Ankush  Â·  Reviewed by Mushteer before anything else is built on top.
 
 These models do double duty:
   1. Validate incoming API request bodies
@@ -19,7 +19,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 # --------------------------------------------------------------------------
-# Enums (as Literals — they serialise into the JSON schema the LLM sees)
+# Enums (as Literals â€” they serialise into the JSON schema the LLM sees)
 # --------------------------------------------------------------------------
 
 Goal = Literal["lose_weight", "build_muscle", "stay_fit", "gain_strength"]
@@ -67,7 +67,7 @@ class UserProfile(BaseModel):
 
 
 # --------------------------------------------------------------------------
-# Weekly plan — this is what the LLM must produce
+# Weekly plan â€” this is what the LLM must produce
 # --------------------------------------------------------------------------
 
 
@@ -82,7 +82,7 @@ class WorkoutExercise(BaseModel):
     )
     rest_seconds: int = Field(default=60, ge=15, le=300, alias="restSeconds")
     notes: Optional[str] = Field(default=None, max_length=200)
-    target_muscle: Optional[str] = Field(default=None, alias="targetMuscle")
+    target_muscle: Optional[Literal["chest", "back", "shoulders", "biceps", "triceps", "core", "glutes", "quadriceps", "hamstrings", "calves"]] = Field(default=None, alias="targetMuscle")
 
     model_config = {"populate_by_name": True, "extra": "allow"}
 
@@ -159,7 +159,7 @@ class WeeklyPlan(BaseModel):
     meal_plan: list[MealDay] = Field(alias="mealPlan")
     coach_note: Optional[str] = Field(default=None, max_length=500, alias="coachNote")
 
-    # metadata — set by the backend, never by the model
+    # metadata â€” set by the backend, never by the model
     generated_at: Optional[datetime] = Field(default=None, alias="generatedAt")
     model_used: Optional[str] = Field(default=None, alias="modelUsed")
     prompt_tokens: Optional[int] = Field(default=None, alias="promptTokens")
@@ -194,7 +194,7 @@ class WeeklyPlan(BaseModel):
 
 
 class DailyLogIn(BaseModel):
-    """What the user POSTs. Raw text only — no LLM call on write."""
+    """What the user POSTs. Raw text only â€” no LLM call on write."""
 
     date: date
     workout_text: str = Field(default="", max_length=4000, alias="workoutText")
@@ -216,7 +216,7 @@ class DailyLog(DailyLogIn):
 
 
 # --------------------------------------------------------------------------
-# Parsed adherence — the LLM's other output contract (log parsing)
+# Parsed adherence â€” the LLM's other output contract (log parsing)
 # --------------------------------------------------------------------------
 
 

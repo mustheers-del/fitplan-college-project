@@ -7,12 +7,25 @@ import {
   EmptyState,
 } from "../components";
 import { api } from "../api/client";
+import MuscleFocus from "../components/MuscleFocus";
 import type { WeeklyPlan } from "../types/api";
 
 export default function WorkoutDetails() {
   const [plan, setPlan] = useState<WeeklyPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const focusedMuscles = Array.from(
+    new Set(
+      (plan?.workoutPlan ?? [])
+        .flatMap((day) => day.exercises ?? [])
+        .map((exercise) => exercise.targetMuscle)
+        .filter(
+          (muscle): muscle is NonNullable<typeof muscle> =>
+            muscle !== null
+        )
+    )
+  );
 
   useEffect(() => {
     async function loadPlan() {
@@ -82,7 +95,10 @@ export default function WorkoutDetails() {
         </Card>
       )}
 
-      <Card title="Weekly Workout">
+              <Card title="Muscle Focus">
+          <MuscleFocus muscles={focusedMuscles} />
+        </Card>
+        <Card title="Weekly Workout">
         <div style={{ display: "grid", gap: "var(--sp-4)" }}>
           {(plan.workoutPlan ?? []).map((day) => (
             <div
@@ -111,7 +127,7 @@ export default function WorkoutDetails() {
               >
                 {day.isRestDay
                   ? "Rest day"
-                  : `${day.durationMin} min • approximately ${day.estCalories} kcal`}
+                  : `${day.durationMin} min â€¢ approximately ${day.estCalories} kcal`}
               </p>
 
               {day.isRestDay ? (
@@ -137,7 +153,7 @@ export default function WorkoutDetails() {
                           color: "var(--c-text-secondary)",
                         }}
                       >
-                        {exercise.sets} sets × {exercise.reps} reps •{" "}
+                        {exercise.sets} sets Ã— {exercise.reps} reps â€¢{" "}
                         {exercise.restSeconds}s rest
                       </p>
 

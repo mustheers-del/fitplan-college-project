@@ -387,41 +387,48 @@ STRICT REQUIREMENTS:
 9. Every rest day must have isRestDay=true and exercises=[].
 10. Every training day must have isRestDay=false and at least one exercise.
 
-11. BEGINNER RULE:
+11. MUSCLE TARGET RULE:
+    Every exercise MUST include targetMuscle.
+    targetMuscle MUST be exactly one of: chest, back, shoulders, biceps,
+    triceps, core, glutes, quadriceps, hamstrings, calves.
+    targetMuscle must accurately describe the primary muscle group targeted
+    by the exercise.
+
+12. BEGINNER RULE:
     If experience_level is beginner, ZERO advanced exercises are allowed.
     Every exercise must be beginner or clearly accessible intermediate.
     Do NOT use advanced barbell movements such as barbell back squat,
     barbell deadlift, barbell bench press, or other technically demanding
     advanced movements for a beginner.
 
-12. INJURY RULE:
+13. INJURY RULE:
     If the user has a knee injury, NEVER use squats, lunges, step-ups,
     jumping, running, or other movements that stress the knee.
     Use safe alternatives instead.
 
-13. EQUIPMENT RULE:
+14. EQUIPMENT RULE:
     Use ONLY equipment explicitly listed in the user's equipment array.
     If equipment is ["bodyweight"], use only exercises requiring no equipment.
     Never assume a bench, chair, wall, stairs, table, weights, bands,
     machines, or other equipment that was not listed.
 
-14. Respect all other injury restrictions.
-15. Respect vegetarian/vegan meal preferences absolutely.
-16. Respect all listed allergies absolutely.
-17. Number of meals per day must equal mealsPerDay.
-18. Total preparation time for each day must not exceed cookingTime.
-19. Every day's totalCalories MUST be within +/-100 kcal of calorieTarget.
-20. Do not intentionally undershoot or overshoot the calorie target.
-21. For every meal, calculate calories from macros as:
+15. Respect all other injury restrictions.
+16. Respect vegetarian/vegan meal preferences absolutely.
+17. Respect all listed allergies absolutely.
+18. Number of meals per day must equal mealsPerDay.
+19. Total preparation time for each day must not exceed cookingTime.
+20. Every day's totalCalories MUST be within +/-100 kcal of calorieTarget.
+21. Do not intentionally undershoot or overshoot the calorie target.
+22. For every meal, calculate calories from macros as:
     proteinG x 4 + carbsG x 4 + fatsG x 9.
     The calories field MUST match that calculation within the schema
     tolerance. NEVER output a calories value that conflicts with the macros.
-22. Before returning JSON, check EVERY exercise against experience,
+23. Before returning JSON, check EVERY exercise against targetMuscle, experience,
     injury, and equipment restrictions.
-23. Before returning JSON, check EVERY meal against diet and allergy rules.
-24. Before returning JSON, check EVERY day's calories against calorieTarget.
-25. Make sure the JSON is COMPLETE and ends with the final closing brace.
-26. Never stop halfway through workoutPlan or mealPlan.
+24. Before returning JSON, check EVERY meal against diet and allergy rules.
+25. Before returning JSON, check EVERY day's calories against calorieTarget.
+26. Make sure the JSON is COMPLETE and ends with the final closing brace.
+27. Never stop halfway through workoutPlan or mealPlan.
 
 ORIGINAL USER REQUEST:
 
