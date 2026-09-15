@@ -3,6 +3,7 @@ import AppShell from "./components/AppShell";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import Onboarding from "./pages/Onboarding";
@@ -21,7 +22,7 @@ import Coach from "./pages/Coach";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -47,3 +48,4 @@ export default function App() {
     </Routes>
   );
 }
+
