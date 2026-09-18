@@ -1,176 +1,61 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/auth/AuthContext";
+import { Button } from "@/components/Button";
 
 const AppShellContext = createContext(false);
-
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard" },
-  { label: "AI Coach", href: "/coach" },
-  { label: "Workout", href: "/workout" },
-  { label: "Meal Plan", href: "/meals" },
-  { label: "Daily Logs", href: "/logs" },
-  { label: "Progress", href: "/progress" },
-  { label: "Calendar", href: "/calendar" },
-  { label: "Achievements", href: "/achievements" },
-  { label: "Profile", href: "/profile" },
-  { label: "Settings", href: "/settings" },
+  { label: "Dashboard", href: "/dashboard", icon: "⌂" },
+  { label: "AI Coach", href: "/coach", icon: "✦" },
+  { label: "Workout", href: "/workout", icon: "◈" },
+  { label: "Meal Plan", href: "/meals", icon: "◌" },
+  { label: "Daily Logs", href: "/logs", icon: "✓" },
+  { label: "Progress", href: "/progress", icon: "↗" },
+  { label: "Calendar", href: "/calendar", icon: "□" },
+  { label: "Achievements", href: "/achievements", icon: "◇" },
+  { label: "Profile", href: "/profile", icon: "○" },
+  { label: "Settings", href: "/settings", icon: "⚙" },
 ];
 
-interface AppShellProps {
-  children?: ReactNode;
-  active?: string;
-  userName?: string;
-}
+interface AppShellProps { children?: ReactNode; active?: string; userName?: string; }
 
 export function AppShell({ children, active, userName }: AppShellProps) {
   const alreadyInsideShell = useContext(AppShellContext);
-
-  if (alreadyInsideShell) {
-    return <>{children}</>;
-  }
-
-  return (
-    <AppShellContext.Provider value={true}>
-      <AppShellLayout active={active} userName={userName}>
-        {children}
-      </AppShellLayout>
-    </AppShellContext.Provider>
-  );
+  if (alreadyInsideShell) return <>{children}</>;
+  return <AppShellContext.Provider value>{<AppShellLayout active={active} userName={userName}>{children}</AppShellLayout>}</AppShellContext.Provider>;
 }
 
-function AppShellLayout({
-  children,
-  active,
-  userName,
-}: AppShellProps) {
+function AppShellLayout({ children, active, userName }: AppShellProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { email, signOut } = useAuth();
-
   const currentPath = active || location.pathname;
   const displayName = userName || email || "FitPlan User";
+  const initials = displayName.slice(0, 1).toUpperCase();
 
-  async function handleLogout() {
-    await signOut();
-    navigate("/login", { replace: true });
-  }
+  async function handleLogout() { await signOut(); navigate("/login", { replace: true }); }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        background: "var(--c-bg, #f8fafc)",
-        color: "var(--c-text, #111827)",
-      }}
-    >
-      <aside
-        style={{
-          width: "240px",
-          minHeight: "100vh",
-          padding: "24px 16px",
-          borderRight: "1px solid var(--c-border, #e5e7eb)",
-          background: "var(--c-surface, #ffffff)",
-          boxSizing: "border-box",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            fontSize: "22px",
-            fontWeight: 700,
-            marginBottom: "28px",
-            padding: "0 12px",
-          }}
-        >
-          FitPlan
-        </div>
-
-        <nav style={{ display: "grid", gap: "6px" }}>
+    <div className="fp-shell">
+      <aside className="fp-sidebar">
+        <div className="fp-sidebar__brand"><span className="fp-sidebar__mark">F</span><span>FitPlan</span></div>
+        <div className="fp-sidebar__section">Workspace</div>
+        <nav aria-label="Main navigation">
           {NAV_ITEMS.map((item) => {
             const isActive = currentPath === item.href;
-
-            return (
-              <button
-                key={item.href}
-                type="button"
-                onClick={() => navigate(item.href)}
-                style={{
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "11px 12px",
-                  border: "none",
-                  borderRadius: "8px",
-                  background: isActive
-                    ? "var(--c-primary, #2563eb)"
-                    : "transparent",
-                  color: isActive
-                    ? "#ffffff"
-                    : "var(--c-text, #111827)",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  fontWeight: isActive ? 600 : 500,
-                }}
-              >
-                {item.label}
-              </button>
-            );
+            return <button className={`fp-sidebar__link ${isActive ? "fp-sidebar__link--active" : ""}`} key={item.href} type="button" onClick={() => navigate(item.href)} aria-current={isActive ? "page" : undefined}><span className="fp-sidebar__icon" aria-hidden="true">{item.icon}</span><span>{item.label}</span></button>;
           })}
         </nav>
-
-        <div
-          style={{
-            marginTop: "auto",
-            paddingTop: "28px",
-            paddingLeft: "12px",
-            paddingRight: "12px",
-          }}
-        >
-          <div
-            style={{
-              fontSize: "13px",
-              color: "var(--c-text-secondary, #6b7280)",
-              marginBottom: "12px",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {displayName}
-          </div>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              border: "1px solid var(--c-border, #e5e7eb)",
-              borderRadius: "8px",
-              background: "transparent",
-              color: "var(--c-text, #111827)",
-              cursor: "pointer",
-              fontWeight: 600,
-            }}
-          >
-            Logout
-          </button>
+        <div className="fp-sidebar__footer">
+          <div className="fp-sidebar__user"><div className="fp-avatar" aria-hidden="true">{initials}</div><div><div className="fp-sidebar__user-name">{displayName}</div><div className="fp-sidebar__user-label">Personal plan</div></div></div>
+          <Button variant="ghost" block size="sm" onClick={handleLogout}>Log out</Button>
         </div>
       </aside>
-
-      <main
-        style={{
-          flex: 1,
-          minWidth: 0,
-          padding: "32px",
-          boxSizing: "border-box",
-        }}
-      >
-        {children ?? <Outlet />}
-      </main>
+      <div className="fp-main">
+        <header className="fp-topbar"><div className="fp-topbar__user"><span className="fp-avatar" aria-hidden="true">{initials}</span><span>{displayName}</span></div></header>
+        <main className="fp-content">{children ?? <Outlet />}</main>
+      </div>
     </div>
   );
 }
-
 export default AppShell;
