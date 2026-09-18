@@ -128,6 +128,8 @@ export interface WorkoutExercise {
   targetMuscle: "chest" | "back" | "shoulders" | "biceps" | "triceps" | "core" | "glutes" | "quadriceps" | "hamstrings" | "calves" | null;
 }
 
+export type Exercise = WorkoutExercise;
+
 export interface WorkoutDay {
   day: number;
   title: string;
@@ -229,3 +231,4 @@ export interface RecipeGenerateOut {
   steps: string[];
   prepMinutes: number;
 }
+

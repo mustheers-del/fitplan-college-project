@@ -15,14 +15,11 @@ import {
 
 import { useAuth } from "@/auth/useAuth";
 
-
-
 type AppShellContextValue = {
   closeMobileMenu: () => void;
 };
 
-const AppShellContext =
-  createContext<AppShellContextValue | null>(null);
+const AppShellContext = createContext<AppShellContextValue | null>(null);
 
 export function useAppShell() {
   return useContext(AppShellContext);
@@ -166,7 +163,7 @@ function Icon({
       return (
         <svg {...common}>
           <circle cx="12" cy="12" r="3" />
-          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2.5V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.6-1H6v-2.5h.2A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2h2.5V5a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 .3 1.9 1.7 1.7 0 0 0 1.6 1h.2V14h-.2a1.7 1.7 0 0 0-1.6 1Z" />
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.8 1.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-2.5V20a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1-1.8-1.8.1-.1A1.7 1.7 0 0 0 8 15a1.7 1.7 0 0 0-1.6-1H6v-2.5h.2A1.7 1.7 0 0 0 8 10a1.7 1.7 0 0 0-.3-1.9l-.1-.1 1.8-1.8.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6v-.2h2.5V5a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1 1.8 1.8-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2V14h-.2a1.7 1.7 0 0 0-1.6 1Z" />
         </svg>
       );
 
@@ -243,7 +240,9 @@ const accountNav = [
 ];
 
 function getInitials(email?: string | null) {
-  if (!email) return "FP";
+  if (!email) {
+    return "FP";
+  }
 
   const name = email.split("@")[0];
 
@@ -333,27 +332,28 @@ function SidebarContent({
           </nav>
         </div>
 
-        <NavLink
-          to="/coach"
-          onClick={onNavigate}
-          className={`sidebar-coach-card ${
-            location.pathname === "/coach" ? "active" : ""
-          }`}
-        >
+        <div className="sidebar-coach-card">
           <div className="sidebar-coach-icon">
             <Icon name="coach" size={19} />
           </div>
 
           <div className="sidebar-coach-copy">
             <span>AI COACH</span>
-            <strong>Your personal guide</strong>
-            <p>Get advice tailored to your plan.</p>
+            <strong>Need some guidance?</strong>
+            <p>Ask anything about your plan.</p>
           </div>
 
-          <span className="sidebar-coach-link">
+          <NavLink
+            to="/coach"
+            className={`sidebar-coach-link ${
+              location.pathname === "/coach" ? "active" : ""
+            }`}
+            onClick={onNavigate}
+            aria-label="Open AI Coach"
+          >
             <Icon name="chevron" size={16} />
-          </span>
-        </NavLink>
+          </NavLink>
+        </div>
 
         <div className="sidebar-section sidebar-account-section">
           <div className="sidebar-section-label">
@@ -362,8 +362,7 @@ function SidebarContent({
 
           <nav className="sidebar-nav">
             {accountNav.map((item) => {
-              const isActive =
-                location.pathname === item.path;
+              const isActive = location.pathname === item.path;
 
               return (
                 <NavLink
@@ -440,8 +439,7 @@ function AppShell({
   children?: ReactNode;
   active?: string;
 }) {
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navigate = useNavigate();
 
@@ -454,7 +452,6 @@ function AppShell({
       await signOut();
     } finally {
       setMobileOpen(false);
-
       navigate("/login", {
         replace: true,
       });
