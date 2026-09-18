@@ -1445,6 +1445,29 @@
   }
 }
 
+/* Reference composition: dense panels on a pale blue-gray working canvas. */
+.dashboard-page { padding:30px 30px 58px; background:var(--c-bg); }
+.dashboard-header { margin-bottom:22px; }
+.dashboard-header h1 { font-family:var(--font-display); color:var(--c-heading); font-size:clamp(28px,2.8vw,40px); }
+.dashboard-header p { color:var(--c-text-secondary); font-size:13px; }
+.dashboard-label,.section-label { color:var(--c-primary); font-size:9px; letter-spacing:.15em; }
+.primary-button { background:var(--c-primary); box-shadow:0 5px 12px rgba(31,99,233,.16); }
+.secondary-button { border-color:var(--c-border); color:var(--c-heading); }
+.stat-card,.today-workout-card,.nutrition-card,.quick-actions-card,.weekly-section,.recovery-card,.week-day { border-color:var(--c-border); box-shadow:var(--shadow-sm); }
+.stat-card { min-height:156px; padding:20px; border-radius:12px; }
+.stat-value { font-family:var(--font-display); font-size:31px; color:var(--c-heading); }
+.stat-title,.card-header-row h2,.section-heading-row h2,.quick-actions-card h2 { font-family:var(--font-display); color:var(--c-heading); }
+.today-workout-card,.nutrition-card,.quick-actions-card { border-radius:13px; }
+.today-workout-card { padding:22px; }
+.workout-summary-item,.muscle-target { background:#f7faff; border-color:var(--c-border-light); }
+.coach-card { border-radius:13px; background:linear-gradient(145deg,#173f92 0%,#216fe7 100%); box-shadow:0 14px 30px rgba(31,99,233,.15); }
+.weekly-section { padding:20px; background:#f7faff; }
+.week-day { min-height:138px; border-radius:10px; }
+.dashboard-bottom-grid { gap:16px; }
+.quick-actions-card { background:#f7faff; }
+@media(max-width:1200px){.dashboard-page{padding-left:24px;padding-right:24px}}
+@media(max-width:680px){.dashboard-page{padding:58px 15px 38px}.dashboard-header h1{font-size:29px}.today-workout-card,.nutrition-card,.quick-actions-card,.weekly-section{padding:17px}}
+
 @media (max-width: 430px) {
   .weekly-grid {
     grid-template-columns: 1fr;

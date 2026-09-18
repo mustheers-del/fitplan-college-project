@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import "./Auth.css";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -68,140 +69,6 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div
-      style={{
-        padding: "40px",
-        maxWidth: "400px",
-        margin: "0 auto",
-      }}
-    >
-      <h1>Forgot Password</h1>
-
-      {!codeSent ? (
-        <form onSubmit={handleSendCode}>
-          <p>
-            Enter your email address and we'll send you a verification code.
-          </p>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="email">Email</label>
-
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                color: "#111827",
-                backgroundColor: "#ffffff",
-              }}
-            />
-          </div>
-
-          {error && (
-            <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>
-          )}
-
-          {message && (
-            <p style={{ color: "green", marginBottom: "16px" }}>{message}</p>
-          )}
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Sending..." : "Send Verification Code"}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleResetPassword}>
-          <p>
-            Enter the verification code sent to <strong>{email}</strong>.
-          </p>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="code">Verification Code</label>
-
-            <input
-              id="code"
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter code"
-              required
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                color: "#111827",
-                backgroundColor: "#ffffff",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="newPassword">New Password</label>
-
-            <input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="New password"
-              required
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                color: "#111827",
-                backgroundColor: "#ffffff",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="confirmPassword">Confirm Password</label>
-
-            <input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
-              required
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-                color: "#111827",
-                backgroundColor: "#ffffff",
-              }}
-            />
-          </div>
-
-          {error && (
-            <p style={{ color: "red", marginBottom: "16px" }}>{error}</p>
-          )}
-
-          {message && (
-            <p style={{ color: "green", marginBottom: "16px" }}>{message}</p>
-          )}
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Changing Password..." : "Change Password"}
-          </button>
-        </form>
-      )}
-
-      <p style={{ marginTop: "20px" }}>
-        Remember your password? <Link to="/login">Back to Login</Link>
-      </p>
-    </div>
+    <main className="auth-page"><section className="auth-visual"><Link className="auth-brand" to="/"><span className="auth-brand-mark">F</span><span>FitPlan</span></Link><div className="auth-visual-copy"><span className="auth-kicker">ACCOUNT ACCESS</span><h2>Back to your best rhythm.</h2><p>Reset your password securely, then pick up right where you left off.</p></div></section><section className="auth-panel"><div className="auth-card"><Link className="auth-back" to="/login">← Back to login</Link><h1>{codeSent ? "Choose a new password" : "Reset your password"}</h1><p>{codeSent ? <>Enter the code sent to <strong>{email}</strong>.</> : "Enter your email and we’ll send a verification code."}</p>{!codeSent ? <form className="auth-form" onSubmit={handleSendCode}><div className="auth-field"><label htmlFor="email">Email address</label><input id="email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@example.com" required /></div>{error && <p className="auth-error">{error}</p>}{message && <p className="auth-message">{message}</p>}<button className="auth-submit" type="submit" disabled={loading}>{loading ? "Sending..." : "Send verification code"}</button></form> : <form className="auth-form" onSubmit={handleResetPassword}><div className="auth-field"><label htmlFor="code">Verification code</label><input className="auth-check" id="code" value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter code" required /></div><div className="auth-field"><label htmlFor="newPassword">New password</label><input id="newPassword" type="password" value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} placeholder="New password" required /></div><div className="auth-field"><label htmlFor="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} placeholder="Confirm new password" required /></div>{error && <p className="auth-error">{error}</p>}{message && <p className="auth-message">{message}</p>}<button className="auth-submit" type="submit" disabled={loading}>{loading ? "Changing password..." : "Change password"}</button></form>}<p className="auth-foot">Remember your password? <Link className="auth-link" to="/login">Sign in</Link></p></div></section></main>
   );
 }

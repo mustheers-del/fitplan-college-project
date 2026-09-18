@@ -1,0 +1,14 @@
+.coach-page { width:min(930px,calc(100% - 60px)); margin:0 auto; padding:30px 0 50px; }
+.coach-page-heading { margin-bottom:20px; }
+.coach-page-heading h1 { margin:0; color:var(--c-heading); font:800 32px var(--font-display); letter-spacing:-.05em; }
+.coach-page-heading p { margin:8px 0 0; color:var(--c-text-secondary); }
+.coach-chat { min-height:580px; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--c-border); border-radius:15px; background:#fff; box-shadow:var(--shadow-md); }
+.coach-messages { flex:1; display:flex; flex-direction:column; gap:14px; padding:26px; overflow-y:auto; background:linear-gradient(180deg,#fff,#f8fbfe); }
+.coach-message { max-width:74%; padding:12px 15px; border-radius:12px; color:var(--c-heading); background:#edf3fb; line-height:1.55; }
+.coach-message.user { align-self:flex-end; color:#fff; background:var(--c-primary); border-bottom-right-radius:4px; }
+.coach-message.coach { align-self:flex-start; border-bottom-left-radius:4px; }
+.coach-composer { display:flex; gap:10px; padding:15px; border-top:1px solid var(--c-border); }
+.coach-composer input { flex:1; min-height:42px; margin:0; }
+.coach-composer button { min-width:76px; border:0; border-radius:8px; color:#fff; background:var(--c-primary); font-weight:700; cursor:pointer; }
+.coach-composer button:disabled { opacity:.55; cursor:not-allowed; }
+@media(max-width:680px){.coach-page{width:calc(100% - 30px);padding:58px 0 35px}.coach-chat{min-height:calc(100dvh - 190px)}.coach-messages{padding:17px}.coach-message{max-width:88%}}

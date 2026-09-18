@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import "./Auth.css";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -51,125 +52,11 @@ export default function Signup() {
 
   if (step === "confirm") {
     return (
-      <div
-        style={{
-          padding: "40px",
-          maxWidth: "400px",
-          margin: "0 auto",
-        }}
-      >
-        <h1>Verify your email</h1>
-
-        <p style={{ marginTop: "10px", marginBottom: "20px" }}>
-          We sent a verification code to <strong>{email}</strong>.
-        </p>
-
-        <form onSubmit={handleConfirm}>
-          <div style={{ marginBottom: "16px" }}>
-            <label htmlFor="code">Verification code</label>
-
-            <input
-              id="code"
-              type="text"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="Enter verification code"
-              required
-              style={{
-                display: "block",
-                width: "100%",
-                padding: "10px",
-                marginTop: "6px",
-              }}
-            />
-          </div>
-
-          {error && (
-            <p style={{ color: "red", marginBottom: "16px" }}>
-              {error}
-            </p>
-          )}
-
-          <button type="submit" disabled={loading}>
-            {loading ? "Verifying..." : "Verify Email"}
-          </button>
-        </form>
-
-        <p style={{ marginTop: "20px" }}>
-          Already verified? <Link to="/login">Go to login</Link>
-        </p>
-      </div>
+      <main className="auth-page"><section className="auth-visual"><Link className="auth-brand" to="/"><span className="auth-brand-mark">F</span><span>FitPlan</span></Link><div className="auth-visual-copy"><span className="auth-kicker">ONE LAST STEP</span><h2>Your routine starts here.</h2><p>Confirm your email and we’ll help you build a plan that fits your life.</p></div></section><section className="auth-panel"><div className="auth-card"><Link className="auth-back" to="/signup">← Back</Link><h1>Verify your email</h1><p>We sent a verification code to <strong>{email}</strong>.</p><form className="auth-form" onSubmit={handleConfirm}><div className="auth-field"><label htmlFor="code">Verification code</label><input className="auth-check" id="code" type="text" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Enter code" required /></div>{error && <p className="auth-error">{error}</p>}<button className="auth-submit" type="submit" disabled={loading}>{loading ? "Verifying..." : "Verify email"}</button></form><p className="auth-foot">Already verified? <Link className="auth-link" to="/login">Go to login</Link></p></div></section></main>
     );
   }
 
   return (
-    <div
-      style={{
-        padding: "40px",
-        maxWidth: "400px",
-        margin: "0 auto",
-      }}
-    >
-      <h1>Create Account</h1>
-
-      <p style={{ marginTop: "10px", marginBottom: "20px" }}>
-        Create your FitPlan account to get started.
-      </p>
-
-      <form onSubmit={handleSignup}>
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="email">Email</label>
-
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "10px",
-              marginTop: "6px",
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="password">Password</label>
-
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Create a password"
-            minLength={8}
-            required
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "10px",
-              marginTop: "6px",
-            }}
-          />
-        </div>
-
-        {error && (
-          <p style={{ color: "red", marginBottom: "16px" }}>
-            {error}
-          </p>
-        )}
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating account..." : "Create Account"}
-        </button>
-      </form>
-
-      <p style={{ marginTop: "20px" }}>
-        Already have an account? <Link to="/login">Login</Link>
-      </p>
-    </div>
+    <main className="auth-page"><section className="auth-visual"><Link className="auth-brand" to="/"><span className="auth-brand-mark">F</span><span>FitPlan</span></Link><div className="auth-visual-copy"><span className="auth-kicker">A BETTER WEEK AHEAD</span><h2>Start with where you are.</h2><p>Tell us what matters to you. FitPlan turns it into a thoughtful, achievable rhythm.</p><div className="auth-metrics"><div className="auth-metric"><strong>3 min</strong><span>To get started</span></div><div className="auth-metric"><strong>1:1</strong><span>Personal guidance</span></div></div></div></section><section className="auth-panel"><div className="auth-card"><Link className="auth-back" to="/">← Back to FitPlan</Link><h1>Create your account</h1><p>Set up your FitPlan profile and build momentum.</p><form className="auth-form" onSubmit={handleSignup}><div className="auth-field"><label htmlFor="email">Email address</label><input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div><div className="auth-field"><label htmlFor="password">Password</label><input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 8 characters" minLength={8} required /></div>{error && <p className="auth-error">{error}</p>}<button className="auth-submit" type="submit" disabled={loading}>{loading ? "Creating account..." : "Create account"}</button></form><p className="auth-foot">Already have an account? <Link className="auth-link" to="/login">Sign in</Link></p></div></section></main>
   );
 }

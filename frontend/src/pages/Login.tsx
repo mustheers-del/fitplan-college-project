@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
+import "./Auth.css";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,30 +13,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   if (!authLoading && userId) {
     return (
-      <div
-        style={{
-          padding: "40px",
-          maxWidth: "400px",
-          margin: "0 auto",
-        }}
-      >
-        <h1>Already signed in</h1>
-
-        <p style={{ marginBottom: "20px" }}>
-          You are already signed in. Sign out before logging in with another
-          account.
-        </p>
-
-        <button
-          type="button"
-          onClick={async () => {
-            await signOut();
-            window.location.reload();
-          }}
-        >
-          Sign out
-        </button>
-      </div>
+      <main className="auth-page"><section className="auth-visual"><Link className="auth-brand" to="/"><span className="auth-brand-mark">F</span><span>FitPlan</span></Link><div className="auth-visual-copy"><span className="auth-kicker">SESSION ACTIVE</span><h2>You’re already in.</h2><p>Sign out below if you’d like to switch to another FitPlan account.</p></div></section><section className="auth-panel"><div className="auth-card"><h1>Already signed in</h1><p>Your FitPlan session is active on this device.</p><button className="auth-submit" type="button" onClick={async () => { await signOut(); window.location.reload(); }}>Sign out</button><p className="auth-foot"><Link className="auth-link" to="/dashboard">Return to dashboard</Link></p></div></section></main>
     );
   }
   const handleSubmit = async (e: FormEvent) => {
@@ -61,81 +39,22 @@ export default function Login() {
   };
 
   return (
-    <div
-      style={{
-        padding: "40px",
-        maxWidth: "400px",
-        margin: "0 auto",
-      }}
-    >
-      <h1>Login</h1>
-
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="email">Email</label>
-
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="demo@fitplan.test"
-            required
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "10px",
-              marginTop: "6px",
-              color: "#111827",
-              backgroundColor: "#ffffff",
-            }}
-          />
-        </div>
-
-        <div style={{ marginBottom: "16px" }}>
-          <label htmlFor="password">Password</label>
-
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "10px",
-              marginTop: "6px",
-              color: "#111827",
-              backgroundColor: "#ffffff",
-            }}
-          />
-
-          <p style={{ marginTop: "8px", textAlign: "right" }}>
-            <Link to="/forgot-password">Forgot password?</Link>
-          </p>
-        </div>
-
-        {error && (
-          <p
-            style={{
-              color: "red",
-              marginBottom: "16px",
-            }}
-          >
-            {error}
-          </p>
-        )}
-
-        <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
-
-      <p style={{ marginTop: "20px" }}>
-        Don't have an account? <Link to="/signup">Sign up</Link>
-      </p>
-    </div>
+    <main className="auth-page">
+      <section className="auth-visual">
+        <Link className="auth-brand" to="/"><span className="auth-brand-mark">F</span><span>FitPlan</span></Link>
+        <div className="auth-visual-copy"><span className="auth-kicker">YOUR PLAN, IN FOCUS</span><h2>Make consistency feel simple.</h2><p>A clear, adaptive routine for the days you have — with guidance that meets you where you are.</p><div className="auth-metrics"><div className="auth-metric"><strong>01</strong><span>Personal plan</span></div><div className="auth-metric"><strong>24/7</strong><span>Coach access</span></div></div></div>
+      </section>
+      <section className="auth-panel"><div className="auth-card">
+        <Link className="auth-back" to="/">← Back to FitPlan</Link>
+        <h1>Welcome back</h1><p>Sign in to continue your fitness journey.</p>
+        <form className="auth-form" onSubmit={handleSubmit}>
+           <div className="auth-field"><label htmlFor="email">Email address</label><input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required /></div>
+           <div className="auth-field"><label htmlFor="password">Password</label><input id="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required /><div style={{textAlign:"right",marginTop:2}}><Link className="auth-link" to="/forgot-password">Forgot password?</Link></div></div>
+          {error && <p className="auth-error">{error}</p>}
+          <button className="auth-submit" type="submit" disabled={loading}>{loading ? "Signing in..." : "Sign in"}</button>
+        </form>
+        <p className="auth-foot">New to FitPlan? <Link className="auth-link" to="/signup">Create an account</Link></p>
+      </div></section>
+    </main>
   );
 }

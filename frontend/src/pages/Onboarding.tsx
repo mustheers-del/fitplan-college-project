@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, ApiRequestError } from "../api/client";
+import "./Auth.css";
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -93,11 +94,11 @@ export default function Onboarding() {
   };
 
   return (
-    <div style={{ padding: "40px", maxWidth: "600px", margin: "0 auto" }}>
-      <h1>Tell us about yourself</h1>
-      <p>We'll use this information to create your fitness plan.</p>
-
-      <form onSubmit={handleSubmit}>
+    <main className="onboarding-page">
+      <div className="onboarding-progress"><span className="auth-brand"><span className="auth-brand-mark">F</span><span>FitPlan</span></span><span>PROFILE SETUP · 1 OF 1</span></div>
+      <section className="onboarding-card">
+      <div className="onboarding-intro"><span className="auth-kicker">A PLAN BUILT AROUND YOU</span><h1>Tell us about yourself</h1><p>Share a few details and we’ll shape your first week around your goals, routine, and comfort level.</p></div>
+      <form className="onboarding-form" onSubmit={handleSubmit}>
         <div>
           <label>Age</label>
           <input
@@ -266,6 +267,7 @@ export default function Onboarding() {
           {loading ? "Saving profile..." : "Save & Continue"}
         </button>
       </form>
-    </div>
+      </section>
+    </main>
   );
 }
