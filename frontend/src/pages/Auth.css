@@ -1051,3 +1051,333 @@
     transition: none;
   }
 }
+/* =========================================================
+   FITPLAN AUTH FINAL DESIGN
+   Login + Signup
+   Matches Forgot Password visual language
+   ========================================================= */
+
+.auth-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 46% 54%;
+  background: #eef5fc;
+  color: #10213e;
+}
+
+/* LEFT BLUE PANEL */
+
+.auth-visual {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 58px;
+  overflow: hidden;
+  border-right: none;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(96, 165, 250, 0.32), transparent 35%),
+    linear-gradient(145deg, #1f55b5 0%, #2464d8 52%, #2768e7 100%);
+}
+
+.auth-brand {
+  position: relative;
+  z-index: 5;
+  color: #ffffff;
+}
+
+.auth-brand:hover {
+  color: #ffffff;
+}
+
+.auth-brand-mark {
+  background: #ffffff;
+  color: #2563eb;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.auth-visual-copy {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  max-width: 590px;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 70px 0;
+}
+
+.auth-kicker {
+  padding: 0;
+  margin-bottom: 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #dbeafe;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+}
+
+.auth-visual-copy h2 {
+  max-width: 570px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(44px, 4vw, 62px);
+  line-height: 1.02;
+  letter-spacing: -0.055em;
+  font-weight: 800;
+}
+
+.auth-visual-copy p {
+  max-width: 500px;
+  margin-top: 23px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.auth-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 38px;
+}
+
+.auth-metric {
+  padding: 17px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.10);
+  box-shadow: none;
+  backdrop-filter: blur(10px);
+}
+
+.auth-metric:hover {
+  transform: translateY(-2px);
+  box-shadow: none;
+}
+
+.auth-metric strong {
+  color: #ffffff;
+  font-size: 20px;
+}
+
+.auth-metric span {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+/* Decorative circles like Forgot Password */
+
+.auth-orb {
+  filter: none;
+  animation: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.auth-orb-one {
+  width: 360px;
+  height: 360px;
+  top: auto;
+  left: auto;
+  right: -130px;
+  bottom: -100px;
+}
+
+.auth-orb-two {
+  width: 220px;
+  height: 220px;
+  top: auto;
+  left: auto;
+  right: -55px;
+  bottom: -25px;
+}
+
+.auth-orb-three {
+  display: none;
+}
+
+/* RIGHT SIDE */
+
+.auth-panel {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 70px;
+  background: #eef5fc;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 520px;
+  padding: 40px 42px;
+  border: 1px solid #dbe4f0;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(44, 72, 110, 0.10);
+  backdrop-filter: none;
+}
+
+.auth-back {
+  margin-bottom: 28px;
+  color: #526987;
+  font-size: 13px;
+}
+
+.auth-heading h1,
+.auth-card > h1 {
+  color: #10213e;
+  font-size: 34px;
+  letter-spacing: -0.04em;
+}
+
+.auth-heading p,
+.auth-card > p {
+  margin-top: 8px;
+  color: #61738f;
+  font-size: 14px;
+}
+
+/* FORM */
+
+.auth-form {
+  gap: 18px;
+  margin-top: 27px;
+}
+
+.auth-field label {
+  color: #15233d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-input-wrap input {
+  height: 52px;
+  padding-left: 45px;
+  border: 1px solid #d8e2ef;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #10213e;
+}
+
+.auth-input-wrap input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+}
+
+.auth-input-icon {
+  color: #8aa0bb;
+}
+
+.auth-submit {
+  height: 52px;
+  border-radius: 11px;
+  background: #2563eb;
+  font-size: 14px;
+  font-weight: 750;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+.auth-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+
+.auth-divider {
+  margin: 22px 0 17px;
+}
+
+.auth-google-button {
+  height: 50px;
+  border-radius: 11px;
+}
+
+.auth-foot {
+  margin-top: 22px !important;
+}
+
+.auth-link {
+  color: #1459df;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1000px) {
+  .auth-page {
+    grid-template-columns: 43% 57%;
+  }
+
+  .auth-visual {
+    padding: 35px;
+  }
+
+  .auth-panel {
+    padding: 40px;
+  }
+
+  .auth-visual-copy h2 {
+    font-size: 46px;
+  }
+}
+
+@media (max-width: 850px) {
+  .auth-page {
+    display: block;
+  }
+
+  .auth-visual {
+    min-height: 430px;
+    padding: 28px 28px 40px;
+  }
+
+  .auth-visual-copy {
+    padding: 55px 0 10px;
+  }
+
+  .auth-panel {
+    min-height: auto;
+    padding: 42px 24px 60px;
+  }
+
+  .auth-card {
+    max-width: 560px;
+  }
+}
+
+@media (max-width: 560px) {
+  .auth-visual {
+    min-height: 390px;
+    padding: 24px 20px 32px;
+  }
+
+  .auth-visual-copy h2 {
+    font-size: 37px;
+  }
+
+  .auth-metrics {
+    gap: 7px;
+  }
+
+  .auth-metric {
+    padding: 13px 9px;
+  }
+
+  .auth-panel {
+    padding: 28px 16px 45px;
+  }
+
+  .auth-card {
+    padding: 27px 22px;
+    border-radius: 18px;
+  }
+
+  .auth-heading h1,
+  .auth-card > h1 {
+    font-size: 28px;
+  }
+}
+
