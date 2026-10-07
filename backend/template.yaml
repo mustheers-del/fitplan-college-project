@@ -25,12 +25,25 @@ Parameters:
   AiProvider:
     Type: String
     Default: openrouter
-    AllowedValues: [openrouter, bedrock]
+    AllowedValues: [openrouter, gemini, bedrock]
     Description: >-
       Which AI backend the plan generator calls. Bedrock model access was
       never granted on this account, so openrouter is the working default.
       Kept as a parameter so we can switch back without a code change if
       Bedrock is ever approved.
+  GeminiModelId:
+    Type: String
+    Default: gemini-3.5-flash-lite
+    Description: Preferred Gemini model used by FitPlan.
+  GeminiKeyParam:
+    Type: String
+    Default: fitplan_gemini_key
+    Description: Name of the SSM SecureString containing the Gemini API key.
+  GeminiTimeout:
+    Type: String
+    Default: "55"
+    Description: Seconds to wait for a Gemini API response.
+
   OpenRouterModelId:
     Type: String
     Default: anthropic/claude-haiku-4.5
@@ -72,6 +85,9 @@ Globals:
         STAGE: !Ref Stage
         BEDROCK_MODEL_ID: !Ref BedrockModelId
         AI_PROVIDER: !Ref AiProvider
+        GEMINI_MODEL_ID: !Ref GeminiModelId
+        GEMINI_KEY_PARAM: !Ref GeminiKeyParam
+        GEMINI_TIMEOUT: !Ref GeminiTimeout
         OPENROUTER_MODEL_ID: !Ref OpenRouterModelId
         OPENROUTER_KEY_PARAM: !Ref OpenRouterKeyParam
         OPENROUTER_TIMEOUT: !Ref OpenRouterTimeout
@@ -213,10 +229,10 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
-          AI_PROVIDER: openrouter
-          OPENROUTER_MODEL_ID: anthropic/claude-haiku-4.5
-          OPENROUTER_KEY_PARAM: fitplan_openrouter_key
-          OPENROUTER_TIMEOUT: "45"
+          AI_PROVIDER: !Ref AiProvider
+          GEMINI_MODEL_ID: !Ref GeminiModelId
+          GEMINI_KEY_PARAM: !Ref GeminiKeyParam
+          GEMINI_TIMEOUT: !Ref GeminiTimeout
       Policies:
         - DynamoDBCrudPolicy: { TableName: !Ref MainTable }
         - Statement:
@@ -234,7 +250,7 @@ Resources:
               # Scoped to the OpenRouterKeyParam parameter so the permission
               # and the parameter name can never drift apart.
               Action: [ssm:GetParameter]
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${GeminiKeyParam}
             - Effect: Allow
               # SecureString decryption. ViaService means this role can only
               # decrypt through SSM, never against KMS directly.
@@ -295,7 +311,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ssm:GetParameter]
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${GeminiKeyParam}
             - Effect: Allow
               Action: [kms:Decrypt]
               Resource: "*"
@@ -329,7 +345,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ssm:GetParameter]
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${GeminiKeyParam}
             - Effect: Allow
               Action: [kms:Decrypt]
               Resource: "*"
@@ -371,7 +387,7 @@ Resources:
         - Statement:
             - Effect: Allow
               Action: [ssm:GetParameter]
-              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${OpenRouterKeyParam}
+              Resource: !Sub arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${GeminiKeyParam}
             - Effect: Allow
               Action: [kms:Decrypt]
               Resource: "*"
@@ -543,3 +559,5 @@ Outputs:
     Condition: FrontendHostingEnabled
     Description: S3 bucket the built frontend is synced into
     Value: !Ref FrontendBucket
+
+

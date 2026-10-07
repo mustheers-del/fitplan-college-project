@@ -3,7 +3,7 @@
 AI provider selector and structured-output handling.
 
 Provider selection is controlled by AI_PROVIDER.
-Supported providers: openrouter, bedrock.
+Supported providers: openrouter, gemini, bedrock.
 """
 
 from __future__ import annotations
@@ -116,6 +116,11 @@ def _invoke(*args: Any, **kwargs: Any):
         from . import openrouter
 
         return openrouter.invoke(*args, **kwargs)
+
+    if provider == "gemini":
+        from . import gemini
+
+        return gemini.invoke(*args, **kwargs)
 
     if provider == "bedrock":
         from . import bedrock
@@ -318,6 +323,23 @@ def invoke_structured(
         "llm_retry" = correction retry succeeded
     """
 
+    # Add explicit injury guidance before asking the model.
+    # This prevents avoidable retries that can exceed API Gateway timeout.
+    if profile is not None:
+        injuries = {str(i).strip().lower() for i in profile.injuries}
+
+        if "lower_back" in injuries:
+            user_content += """
+            
+CRITICAL LOWER BACK INJURY RULE:
+The user has a lower_back injury.
+NEVER include Romanian Deadlifts, Dumbbell Romanian Deadlifts, conventional
+deadlifts, good mornings, bent-over rows, back extensions, or any exercise
+that heavily loads or hinges through the lower back.
+Choose supported, upright, seated, lying, or other lower-back-safe exercises.
+This rule is mandatory for EVERY training day.
+"""
+
     # ===============================================================
     # FIRST ATTEMPT
     # ===============================================================
@@ -509,6 +531,11 @@ def model_id() -> str:
 
         return openrouter.MODEL_ID
 
+    if provider == "gemini":
+        from . import gemini
+
+        return gemini.MODEL_ID
+
     if provider == "bedrock":
         from . import bedrock
 
@@ -517,4 +544,7 @@ def model_id() -> str:
     raise ValueError(
         f"Unknown AI_PROVIDER: {provider!r}"
     )
+
+
+
 

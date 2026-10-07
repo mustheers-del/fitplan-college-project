@@ -115,6 +115,7 @@ def day_layout(days_per_week: int) -> str:
         4: ["train", "train", "rest", "train", "rest", "train", "rest"],
         5: ["train", "train", "rest", "train", "train", "rest", "train"],
         6: ["train", "train", "train", "rest", "train", "train", "train"],
+        7: ["train", "train", "train", "train", "train", "train", "train"],
     }[days_per_week]
 
     return "\n".join(
@@ -317,4 +318,5 @@ def build_parse_user_prompt(
             json.dumps(schema, separators=(",", ":")),
         ]
     )
+
 

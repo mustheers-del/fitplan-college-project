@@ -80,12 +80,35 @@ export default function Dashboard() {
       const response = await api.generatePlan({ force: true });
       setPlan(response.plan);
     } catch (err) {
-      console.error(err);
+      console.error("Generate request ended before plan was returned:", err);
+
+      // The backend may still be finishing the AI plan after the HTTP request
+      // times out. Poll GET /plans until the saved plan becomes available.
+      for (let attempt = 0; attempt < 12; attempt += 1) {
+        try {
+          await new Promise((resolve) => setTimeout(resolve, 2500));
+
+          const saved = await api.getPlan();
+
+          if (saved.plan) {
+            setPlan(saved.plan);
+            setError(null);
+            return;
+          }
+        } catch (pollError) {
+          if (
+            pollError instanceof ApiRequestError &&
+            pollError.status === 404
+          ) {
+            continue;
+          }
+
+          console.error("Plan polling error:", pollError);
+        }
+      }
 
       setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to generate your plan.",
+        "Your plan is taking longer than expected. Please try again.",
       );
     } finally {
       setGenerating(false);

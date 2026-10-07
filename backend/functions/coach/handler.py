@@ -35,9 +35,12 @@ IMPORTANT SAFETY RULES:
 - Use the profile and recent logs as context.
 - If there is not enough information, say so instead of making up details.
 
-Return ONLY the natural-language answer to the user.
-Do not return JSON.
+Return ONLY valid JSON in exactly this format:
+{"reply": "your natural-language answer here"}
+
+The reply value must contain the concise natural-language answer.
 Do not use markdown code fences.
+Do not add any other fields.
 """
 
 
@@ -101,7 +104,8 @@ Keep the answer concise, useful, and personalized.
             temperature=0.4,
         )
 
-        reply = result.text.strip()
+        parsed = ai.extract_json(result.text)
+        reply = str(parsed.get("reply", "")).strip()
 
         if not reply:
             return auth.error("AI returned an empty response", 502)
@@ -113,3 +117,4 @@ Keep the answer concise, useful, and personalized.
     except Exception:
         log.exception("Coach AI request failed")
         return auth.error("coach service temporarily unavailable", 502)
+
