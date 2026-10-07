@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  AppShell,
   Card,
   Button,
   PageHeader,
@@ -9,12 +8,19 @@ import {
 } from "../components";
 import { api } from "../api/client";
 import type { UserProfile } from "../types/api";
+import "./Profile.css";
 
 const INJURY_OPTIONS = [
   { value: "knee", label: "Knee" },
   { value: "shoulder", label: "Shoulder" },
   { value: "lower_back", label: "Lower Back" },
 ];
+
+function formatValue(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (letter: string) => letter.toUpperCase());
+}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -96,7 +102,7 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <AppShell active="/profile">
+      <>
         <PageHeader
           title="Profile"
           subtitle="View and update your fitness preferences"
@@ -104,207 +110,255 @@ export default function Profile() {
         <Card>
           <LoadingSkeleton lines={8} />
         </Card>
-      </AppShell>
+      </>
     );
   }
 
   if (!profile) {
     return (
-      <AppShell active="/profile">
+      <>
         <PageHeader title="Profile" />
         <Card>
-          <p style={{ color: "var(--c-danger)" }}>
+          <p className="fp-profile-error">
             {message || "Unable to load your profile."}
           </p>
         </Card>
-      </AppShell>
+      </>
     );
   }
 
   return (
-    <AppShell active="/profile">
+    <>
       <PageHeader
         title="Profile"
-        subtitle="Update your fitness details"
+        subtitle="Manage the details that shape your FitPlan experience"
       />
 
-      <Card title="Personal Information">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "var(--space-4)",
-          }}
-        >
-          <label>
-            Age
-            <input
-              type="number"
-              value={profile.age}
-              onChange={(e) => updateField("age", Number(e.target.value))}
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            />
-          </label>
+      <div className="fp-profile-page">
+        <section className="fp-profile-overview">
+          <Card>
+            <div className="fp-profile-summary">
+              <div className="fp-profile-avatar" aria-hidden="true">
+                {String(profile.sex).charAt(0).toUpperCase()}
+              </div>
 
-          <label>
-            Sex
-            <select
-              value={profile.sex}
-              onChange={(e) =>
-                updateField("sex", e.target.value as UserProfile["sex"])
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            >
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </label>
+              <div className="fp-profile-summary-copy">
+                <span className="fp-profile-eyebrow">FITNESS PROFILE</span>
+                <h2>{formatValue(profile.goal)}</h2>
+                <p>
+                  {formatValue(profile.experience)} ·{" "}
+                  {profile.daysPerWeek} training days per week
+                </p>
+              </div>
 
-          <label>
-            Height (cm)
-            <input
-              type="number"
-              value={profile.heightCm}
-              onChange={(e) =>
-                updateField("heightCm", Number(e.target.value))
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            />
-          </label>
+              <div className="fp-profile-summary-tags">
+                <span>{profile.age} yrs</span>
+                <span>{profile.heightCm} cm</span>
+                <span>{profile.weightKg} kg</span>
+              </div>
+            </div>
+          </Card>
+        </section>
 
-          <label>
-            Weight (kg)
-            <input
-              type="number"
-              value={profile.weightKg}
-              onChange={(e) =>
-                updateField("weightKg", Number(e.target.value))
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            />
-          </label>
+        <div className="fp-profile-grid">
+          <Card title="Personal Information">
+            <div className="fp-profile-form-grid">
+              <label className="fp-profile-field">
+                <span>Age</span>
+                <div className="fp-profile-input-wrap">
+                  <input
+                    type="number"
+                    value={profile.age}
+                    onChange={(e) =>
+                      updateField("age", Number(e.target.value))
+                    }
+                  />
+                  <span className="fp-profile-unit">yrs</span>
+                </div>
+              </label>
+
+              <label className="fp-profile-field">
+                <span>Sex</span>
+                <select
+                  value={profile.sex}
+                  onChange={(e) =>
+                    updateField(
+                      "sex",
+                      e.target.value as UserProfile["sex"],
+                    )
+                  }
+                >
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </label>
+
+              <label className="fp-profile-field">
+                <span>Height</span>
+                <div className="fp-profile-input-wrap">
+                  <input
+                    type="number"
+                    value={profile.heightCm}
+                    onChange={(e) =>
+                      updateField(
+                        "heightCm",
+                        Number(e.target.value),
+                      )
+                    }
+                  />
+                  <span className="fp-profile-unit">cm</span>
+                </div>
+              </label>
+
+              <label className="fp-profile-field">
+                <span>Weight</span>
+                <div className="fp-profile-input-wrap">
+                  <input
+                    type="number"
+                    value={profile.weightKg}
+                    onChange={(e) =>
+                      updateField(
+                        "weightKg",
+                        Number(e.target.value),
+                      )
+                    }
+                  />
+                  <span className="fp-profile-unit">kg</span>
+                </div>
+              </label>
+            </div>
+          </Card>
+
+          <Card title="Fitness Preferences">
+            <div className="fp-profile-form-grid">
+              <label className="fp-profile-field">
+                <span>Goal</span>
+                <select
+                  value={profile.goal}
+                  onChange={(e) =>
+                    updateField(
+                      "goal",
+                      e.target.value as UserProfile["goal"],
+                    )
+                  }
+                >
+                  <option value="lose_weight">Lose Weight</option>
+                  <option value="build_muscle">Build Muscle</option>
+                  <option value="stay_fit">Stay Fit</option>
+                  <option value="gain_strength">Gain Strength</option>
+                </select>
+              </label>
+
+              <label className="fp-profile-field">
+                <span>Experience</span>
+                <select
+                  value={profile.experience}
+                  onChange={(e) =>
+                    updateField(
+                      "experience",
+                      e.target.value as UserProfile["experience"],
+                    )
+                  }
+                >
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </label>
+
+              <label className="fp-profile-field">
+                <span>Activity Level</span>
+                <select
+                  value={profile.activityLevel}
+                  onChange={(e) =>
+                    updateField(
+                      "activityLevel",
+                      e.target.value as UserProfile["activityLevel"],
+                    )
+                  }
+                >
+                  <option value="sedentary">Sedentary</option>
+                  <option value="light">Light</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="active">Active</option>
+                  <option value="very_active">Very Active</option>
+                </select>
+              </label>
+
+              <label className="fp-profile-field">
+                <span>Days Per Week</span>
+                <div className="fp-profile-input-wrap">
+                  <input
+                    type="number"
+                    min="1"
+                    max="7"
+                    value={profile.daysPerWeek}
+                    onChange={(e) =>
+                      updateField(
+                        "daysPerWeek",
+                        Number(e.target.value),
+                      )
+                    }
+                  />
+                  <span className="fp-profile-unit">days</span>
+                </div>
+              </label>
+            </div>
+          </Card>
         </div>
-      </Card>
 
-      <Card title="Fitness Preferences">
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: "var(--space-4)",
-          }}
-        >
-          <label>
-            Goal
-            <select
-              value={profile.goal}
-              onChange={(e) =>
-                updateField("goal", e.target.value as UserProfile["goal"])
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            >
-              <option value="lose_weight">Lose Weight</option>
-              <option value="build_muscle">Build Muscle</option>
-              <option value="stay_fit">Stay Fit</option>
-              <option value="gain_strength">Gain Strength</option>
-            </select>
-          </label>
+        <Card title="Injury Considerations">
+          <div className="fp-profile-injury-grid">
+            {INJURY_OPTIONS.map((injury) => {
+              const checked = (profile.injuries ?? []).includes(
+                injury.value,
+              );
 
-          <label>
-            Experience
-            <select
-              value={profile.experience}
-              onChange={(e) =>
-                updateField(
-                  "experience",
-                  e.target.value as UserProfile["experience"],
-                )
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            >
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
-          </label>
+              return (
+                <label
+                  key={injury.value}
+                  className={`fp-profile-injury ${
+                    checked ? "fp-profile-injury--active" : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleInjury(injury.value)}
+                  />
 
-          <label>
-            Activity Level
-            <select
-              value={profile.activityLevel}
-              onChange={(e) =>
-                updateField(
-                  "activityLevel",
-                  e.target.value as UserProfile["activityLevel"],
-                )
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            >
-              <option value="sedentary">Sedentary</option>
-              <option value="light">Light</option>
-              <option value="moderate">Moderate</option>
-              <option value="active">Active</option>
-              <option value="very_active">Very Active</option>
-            </select>
-          </label>
+                  <span className="fp-profile-injury-check">
+                    {checked ? "?" : ""}
+                  </span>
 
-          <label>
-            Days Per Week
-            <input
-              type="number"
-              min="1"
-              max="7"
-              value={profile.daysPerWeek}
-              onChange={(e) =>
-                updateField("daysPerWeek", Number(e.target.value))
-              }
-              style={{ width: "100%", marginTop: "var(--space-2)" }}
-            />
-          </label>
+                  <span>{injury.label}</span>
+                </label>
+              );
+            })}
+          </div>
+        </Card>
+
+        {message && (
+          <div className="fp-profile-message" role="status">
+            {message}
+          </div>
+        )}
+
+        <div className="fp-profile-actions">
+          <div>
+            <strong>Keep your plan accurate</strong>
+            <span>
+              Changes are used to personalize your fitness plan.
+            </span>
+          </div>
+
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Changes"}
+          </Button>
         </div>
-      </Card>
-
-      <Card title="Injuries">
-        <div style={{ display: "grid", gap: "var(--space-3)" }}>
-          {INJURY_OPTIONS.map((injury) => (
-            <label
-              key={injury.value}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "var(--space-2)",
-                cursor: "pointer",
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={(profile.injuries ?? []).includes(injury.value)}
-                onChange={() => toggleInjury(injury.value)}
-              />
-              {injury.label}
-            </label>
-          ))}
-        </div>
-      </Card>
-
-      {message && (
-        <p
-          style={{
-            marginTop: "var(--space-4)",
-            color: "var(--c-danger)",
-          }}
-        >
-          {message}
-        </p>
-      )}
-
-      <div style={{ marginTop: "var(--space-4)" }}>
-        <Button onClick={handleSave} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Changes"}
-        </Button>
       </div>
-    </AppShell>
+    </>
   );
 }
 

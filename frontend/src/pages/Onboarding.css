@@ -1,0 +1,430 @@
+/* =========================================================
+   FITPLAN — ONBOARDING PAGE STYLES
+   ========================================================= */
+
+.onboarding-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(31, 99, 233, 0.05),
+      transparent 50%
+    ),
+    var(--c-bg);
+  color: var(--c-heading);
+}
+
+.onboarding-container {
+  width: 100%;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* Header & Logo */
+.onboarding-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.onboarding-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--c-heading);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 18px;
+  font-family: var(--font-display);
+}
+
+.onboarding-brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: #ffffff;
+  background: var(--c-primary);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(31, 99, 233, 0.2);
+}
+
+.onboarding-brand-mark svg {
+  width: 20px;
+  height: 20px;
+}
+
+.onboarding-step-counter {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--c-primary);
+  letter-spacing: 0.1em;
+  background: var(--c-primary-light);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--c-primary-soft);
+}
+
+/* Progress Stepper Bar */
+.onboarding-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.onboarding-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-text-muted);
+  transition: all var(--transition-normal);
+}
+
+.onboarding-step-item.active {
+  color: var(--c-primary-dark);
+  background: var(--c-primary-light);
+  border-color: #bad3fb;
+  box-shadow: var(--shadow-sm);
+}
+
+.onboarding-step-item.completed {
+  color: var(--c-heading);
+  background: var(--c-surface);
+  border-color: var(--c-border);
+}
+
+.onboarding-step-num {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  background: var(--c-surface-muted);
+  color: var(--c-text-muted);
+}
+
+.onboarding-step-item.active .onboarding-step-num {
+  background: var(--c-primary);
+  color: #ffffff;
+}
+
+.onboarding-step-item.completed .onboarding-step-num {
+  background: var(--c-success-light);
+  color: var(--c-success);
+}
+
+.onboarding-step-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 11px;
+}
+
+/* Main Card Panel */
+.onboarding-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  box-shadow: var(--shadow-md);
+}
+
+.onboarding-intro {
+  margin-bottom: 24px;
+}
+
+.onboarding-kicker {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--c-primary);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.onboarding-intro h1 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--c-heading);
+  letter-spacing: -0.03em;
+}
+
+.onboarding-intro p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--c-text-secondary);
+  line-height: 1.5;
+}
+
+/* Form Layout */
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.onboarding-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.onboarding-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.onboarding-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-heading);
+}
+
+.onboarding-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.onboarding-input-wrap input,
+.onboarding-field select {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: #fbfdff;
+  color: var(--c-heading);
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.onboarding-input-wrap input:focus,
+.onboarding-field select:focus {
+  border-color: var(--c-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+.onboarding-input-unit {
+  position: absolute;
+  right: 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-text-muted);
+  pointer-events: none;
+}
+
+.onboarding-field small {
+  font-size: 11px;
+  color: var(--c-text-muted);
+}
+
+/* Choice Cards Grid (Radio & Checkbox cards) */
+.onboarding-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.onboarding-choice-grid--3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.onboarding-choice-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  min-height: 52px;
+  background: #fbfdff;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.onboarding-choice-card:hover {
+  border-color: #b3cdf8;
+  background: #ffffff;
+  transform: translateY(-1px);
+}
+
+.onboarding-choice-card.selected {
+  border-color: var(--c-primary);
+  background: var(--c-primary-light);
+  box-shadow: 0 2px 8px rgba(31, 99, 233, 0.08);
+}
+
+.onboarding-choice-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--c-surface-muted);
+  color: var(--c-text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.onboarding-choice-card.selected .onboarding-choice-icon {
+  background: var(--c-primary);
+  color: #ffffff;
+}
+
+.onboarding-choice-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.onboarding-choice-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.onboarding-choice-content strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-heading);
+  line-height: 1.2;
+}
+
+.onboarding-choice-card.selected .onboarding-choice-content strong {
+  color: var(--c-primary-dark);
+}
+
+.onboarding-choice-content span {
+  font-size: 11px;
+  color: var(--c-text-muted);
+  margin-top: 2px;
+}
+
+/* Day Selector Pill Grid */
+.onboarding-days-grid {
+  display: flex;
+  gap: 8px;
+}
+
+.onboarding-day-pill {
+  flex: 1;
+  height: 42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #fbfdff;
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-heading);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.onboarding-day-pill:hover {
+  border-color: #b3cdf8;
+  background: #ffffff;
+}
+
+.onboarding-day-pill.selected {
+  border-color: var(--c-primary);
+  background: var(--c-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(31, 99, 233, 0.2);
+}
+
+/* Error banner */
+.onboarding-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--c-danger-light);
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  color: var(--c-danger);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Actions Row */
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--c-border-light);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .onboarding-page {
+    padding: 16px 12px;
+  }
+  
+  .onboarding-card {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .onboarding-stepper {
+    gap: 4px;
+  }
+
+  .onboarding-step-item {
+    padding: 6px;
+    justify-content: center;
+  }
+
+  .onboarding-step-label {
+    display: none;
+  }
+
+  .onboarding-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .onboarding-choice-grid,
+  .onboarding-choice-grid--3 {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .onboarding-days-grid {
+    gap: 4px;
+  }
+
+  .onboarding-day-pill {
+    height: 38px;
+    font-size: 12px;
+  }
+}

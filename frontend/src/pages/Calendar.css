@@ -1,0 +1,308 @@
+/* =========================================================
+   FITPLAN — CALENDAR PAGE STYLES
+   ========================================================= */
+
+.fp-calendar-page {
+  width: 100%;
+  max-width: var(--content-max-width, 1400px);
+  margin: 0 auto;
+  padding: 24px 30px 48px;
+  color: var(--c-heading);
+}
+
+/* Page Header */
+.fp-calendar-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.fp-calendar-eyebrow {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--c-primary);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+
+.fp-calendar-header h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 2.5vw, 36px);
+  font-weight: 800;
+  color: var(--c-heading);
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+
+.fp-calendar-header p {
+  margin: 8px 0 0;
+  max-width: 640px;
+  font-size: 14px;
+  color: var(--c-text-secondary);
+  line-height: 1.5;
+}
+
+/* Section Cards */
+.fp-calendar-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.fp-calendar-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.fp-calendar-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fp-calendar-card-title h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-heading);
+  letter-spacing: -0.02em;
+}
+
+.fp-calendar-icon-badge {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+}
+
+.fp-calendar-icon-badge svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fp-calendar-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-primary);
+  background: var(--c-primary-light);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-primary-soft);
+}
+
+/* Weekly Schedule Grid (7 Days) */
+.fp-week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.fp-week-day-card {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px;
+  background: #fbfdff;
+  border: 1.5px solid var(--c-border-light);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+  min-height: 120px;
+}
+
+.fp-week-day-card:hover {
+  border-color: #b3cdf8;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+
+.fp-week-day-card.completed {
+  border-color: #a7f3d0;
+  background: #f0fdf4;
+}
+
+.fp-week-day-card.rest {
+  background: var(--c-surface-muted);
+  opacity: 0.9;
+}
+
+.fp-week-day-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.fp-week-day-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--c-heading);
+}
+
+.fp-week-day-num {
+  font-size: 9px;
+  font-weight: 800;
+  color: var(--c-text-muted);
+}
+
+.fp-week-day-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-heading);
+  line-height: 1.35;
+  margin: 4px 0 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.fp-week-day-status {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  width: fit-content;
+}
+
+.fp-week-day-status.completed {
+  background: var(--c-success-light);
+  color: #047857;
+}
+
+.fp-week-day-status.rest {
+  background: var(--c-surface-muted);
+  color: var(--c-text-muted);
+  border: 1px solid var(--c-border-light);
+}
+
+.fp-week-day-status.duration {
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+}
+
+/* Recent Activity Grid */
+.fp-calendar-history-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.fp-calendar-log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fbfdff;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.fp-calendar-log-item:hover {
+  border-color: #b3cdf8;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.fp-calendar-log-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--c-heading);
+}
+
+.fp-calendar-log-date svg {
+  width: 16px;
+  height: 16px;
+  color: var(--c-primary);
+}
+
+.fp-calendar-log-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--c-text-secondary);
+}
+
+.fp-log-pill {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.fp-log-pill.workout {
+  background: var(--c-primary-light);
+  color: var(--c-primary-dark);
+}
+
+.fp-log-pill.meals {
+  background: var(--c-warning-light);
+  color: #b45309;
+}
+
+.fp-log-pill.none {
+  background: var(--c-surface-muted);
+  color: var(--c-text-muted);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 1024px) {
+  .fp-week-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .fp-calendar-page {
+    padding: 16px 14px 36px;
+  }
+
+  .fp-calendar-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .fp-week-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .fp-calendar-history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .fp-calendar-card {
+    padding: 16px;
+  }
+
+  .fp-calendar-log-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+}

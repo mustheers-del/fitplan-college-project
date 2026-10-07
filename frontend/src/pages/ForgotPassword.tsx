@@ -1,7 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import "./Auth.css";
+import "./ForgotPassword.css";
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -31,7 +31,9 @@ export default function ForgotPassword() {
       setMessage("A verification code has been sent to your email.");
     } catch (err) {
       console.error(err);
-      setError("Could not send the verification code. Please check your email.");
+      setError(
+        "Could not send the verification code. Please check your email.",
+      );
     } finally {
       setLoading(false);
     }
@@ -53,7 +55,9 @@ export default function ForgotPassword() {
     try {
       await confirmResetPassword(email, code, newPassword);
 
-      setMessage("Password changed successfully. Redirecting to login...");
+      setMessage(
+        "Password changed successfully. Redirecting to login...",
+      );
 
       setTimeout(() => {
         navigate("/login");
@@ -69,6 +73,179 @@ export default function ForgotPassword() {
   };
 
   return (
-    <main className="auth-page"><section className="auth-visual"><Link className="auth-brand" to="/"><span className="auth-brand-mark">F</span><span>FitPlan</span></Link><div className="auth-visual-copy"><span className="auth-kicker">ACCOUNT ACCESS</span><h2>Back to your best rhythm.</h2><p>Reset your password securely, then pick up right where you left off.</p></div></section><section className="auth-panel"><div className="auth-card"><Link className="auth-back" to="/login">‚Üê Back to login</Link><h1>{codeSent ? "Choose a new password" : "Reset your password"}</h1><p>{codeSent ? <>Enter the code sent to <strong>{email}</strong>.</> : "Enter your email and we‚Äôll send a verification code."}</p>{!codeSent ? <form className="auth-form" onSubmit={handleSendCode}><div className="auth-field"><label htmlFor="email">Email address</label><input id="email" type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@example.com" required /></div>{error && <p className="auth-error">{error}</p>}{message && <p className="auth-message">{message}</p>}<button className="auth-submit" type="submit" disabled={loading}>{loading ? "Sending..." : "Send verification code"}</button></form> : <form className="auth-form" onSubmit={handleResetPassword}><div className="auth-field"><label htmlFor="code">Verification code</label><input className="auth-check" id="code" value={code} onChange={(e)=>setCode(e.target.value)} placeholder="Enter code" required /></div><div className="auth-field"><label htmlFor="newPassword">New password</label><input id="newPassword" type="password" value={newPassword} onChange={(e)=>setNewPassword(e.target.value)} placeholder="New password" required /></div><div className="auth-field"><label htmlFor="confirmPassword">Confirm password</label><input id="confirmPassword" type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} placeholder="Confirm new password" required /></div>{error && <p className="auth-error">{error}</p>}{message && <p className="auth-message">{message}</p>}<button className="auth-submit" type="submit" disabled={loading}>{loading ? "Changing password..." : "Change password"}</button></form>}<p className="auth-foot">Remember your password? <Link className="auth-link" to="/login">Sign in</Link></p></div></section></main>
+    <main className="fp-forgot-page">
+      <section className="fp-forgot-visual">
+        <Link className="fp-forgot-brand" to="/">
+          <span className="fp-forgot-brand-mark">F</span>
+          <span>FitPlan</span>
+        </Link>
+
+        <div className="fp-forgot-visual-copy">
+          <span className="fp-forgot-kicker">ACCOUNT RECOVERY</span>
+          <h2>Get back to your plan.</h2>
+          <p>
+            Reset your password securely and continue your fitness journey
+            without losing your progress.
+          </p>
+        </div>
+
+        <div className="fp-forgot-visual-card">
+          <span>SECURE ACCESS</span>
+          <strong>Your account stays protected.</strong>
+          <p>
+            We use a verification code to confirm itís really you before
+            changing your password.
+          </p>
+        </div>
+      </section>
+
+      <section className="fp-forgot-panel">
+        <div className="fp-forgot-card">
+          <Link className="fp-forgot-back" to="/login">
+            ? Back to login
+          </Link>
+
+          <div className="fp-forgot-step">
+            <span>{codeSent ? "STEP 2 OF 2" : "STEP 1 OF 2"}</span>
+          </div>
+
+          <div className="fp-forgot-heading">
+            <h1>
+              {codeSent
+                ? "Choose a new password"
+                : "Reset your password"}
+            </h1>
+
+            <p>
+              {codeSent ? (
+                <>
+                  Enter the verification code sent to{" "}
+                  <strong>{email}</strong> and choose a new password.
+                </>
+              ) : (
+                "Enter your email and weíll send a verification code."
+              )}
+            </p>
+          </div>
+
+          {!codeSent ? (
+            <form
+              className="fp-forgot-form"
+              onSubmit={handleSendCode}
+            >
+              <label className="fp-forgot-field">
+                <span>Email address</span>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                />
+              </label>
+
+              {error && (
+                <div className="fp-forgot-alert fp-forgot-alert--error">
+                  {error}
+                </div>
+              )}
+
+              {message && (
+                <div className="fp-forgot-alert fp-forgot-alert--success">
+                  {message}
+                </div>
+              )}
+
+              <button
+                className="fp-forgot-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Send verification code"}
+              </button>
+            </form>
+          ) : (
+            <form
+              className="fp-forgot-form"
+              onSubmit={handleResetPassword}
+            >
+              <label className="fp-forgot-field">
+                <span>Verification code</span>
+                <input
+                  id="code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="Enter code"
+                  required
+                />
+              </label>
+
+              <label className="fp-forgot-field">
+                <span>New password</span>
+                <input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="New password"
+                  required
+                />
+              </label>
+
+              <label className="fp-forgot-field">
+                <span>Confirm password</span>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  required
+                />
+              </label>
+
+              {error && (
+                <div className="fp-forgot-alert fp-forgot-alert--error">
+                  {error}
+                </div>
+              )}
+
+              {message && (
+                <div className="fp-forgot-alert fp-forgot-alert--success">
+                  {message}
+                </div>
+              )}
+
+              <button
+                className="fp-forgot-submit"
+                type="submit"
+                disabled={loading}
+              >
+                {loading
+                  ? "Changing password..."
+                  : "Change password"}
+              </button>
+            </form>
+          )}
+
+          <div className="fp-forgot-security-note">
+            <span className="fp-forgot-security-icon">?</span>
+            <div>
+              <strong>Secure password recovery</strong>
+              <p>
+                Your password is updated only after the verification
+                code is confirmed.
+              </p>
+            </div>
+          </div>
+
+          <p className="fp-forgot-foot">
+            Remember your password?{" "}
+            <Link to="/login">Sign in</Link>
+          </p>
+        </div>
+      </section>
+    </main>
   );
 }

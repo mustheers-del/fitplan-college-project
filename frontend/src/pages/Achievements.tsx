@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  AppShell,
   Card,
   PageHeader,
   LoadingSkeleton,
@@ -8,6 +7,7 @@ import {
 } from "../components";
 import { api } from "../api/client";
 import type { DailyLog } from "../types/api";
+import "./Achievements.css";
 
 export default function Achievements() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
@@ -78,9 +78,17 @@ export default function Achievements() {
     },
   ];
 
+  const unlockedCount = achievements.filter(
+    (achievement) => achievement.unlocked,
+  ).length;
+
+  const completionPercent = Math.round(
+    (unlockedCount / achievements.length) * 100,
+  );
+
   if (isLoading) {
     return (
-      <AppShell active="/achievements">
+      <>
         <PageHeader
           title="Achievements"
           subtitle="Milestones from your fitness journey"
@@ -88,13 +96,13 @@ export default function Achievements() {
         <Card>
           <LoadingSkeleton lines={8} />
         </Card>
-      </AppShell>
+      </>
     );
   }
 
   if (error) {
     return (
-      <AppShell active="/achievements">
+      <>
         <PageHeader title="Achievements" />
         <Card>
           <EmptyState
@@ -102,103 +110,148 @@ export default function Achievements() {
             message={error}
           />
         </Card>
-      </AppShell>
+      </>
     );
   }
 
   return (
-    <AppShell active="/achievements">
+    <>
       <PageHeader
         title="Achievements"
         subtitle="Milestones from your fitness journey"
       />
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "var(--space-4)",
-        }}
-      >
-        <Card title="Check-ins">
-          <strong style={{ fontSize: "var(--fs-2xl)" }}>
-            {checkIns}
-          </strong>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              marginTop: "var(--space-1)",
-            }}
-          >
-            completed
-          </p>
+      <section className="fp-achievements-stats">
+        <Card>
+          <div className="fp-achievements-stat">
+            <div className="fp-achievements-stat-icon fp-achievements-stat-icon--primary">
+              C
+            </div>
+            <div>
+              <span className="fp-achievements-stat-label">Check-ins</span>
+              <strong className="fp-achievements-stat-value">{checkIns}</strong>
+              <span className="fp-achievements-stat-meta">completed</span>
+            </div>
+          </div>
         </Card>
 
-        <Card title="Workouts">
-          <strong style={{ fontSize: "var(--fs-2xl)" }}>
-            {workoutDays}
-          </strong>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              marginTop: "var(--space-1)",
-            }}
-          >
-            logged
-          </p>
+        <Card>
+          <div className="fp-achievements-stat">
+            <div className="fp-achievements-stat-icon fp-achievements-stat-icon--workout">
+              W
+            </div>
+            <div>
+              <span className="fp-achievements-stat-label">Workouts</span>
+              <strong className="fp-achievements-stat-value">
+                {workoutDays}
+              </strong>
+              <span className="fp-achievements-stat-meta">logged</span>
+            </div>
+          </div>
         </Card>
 
-        <Card title="Nutrition">
-          <strong style={{ fontSize: "var(--fs-2xl)" }}>
-            {nutritionDays}
-          </strong>
-          <p
-            style={{
-              color: "var(--color-text-muted)",
-              marginTop: "var(--space-1)",
-            }}
-          >
-            days logged
-          </p>
+        <Card>
+          <div className="fp-achievements-stat">
+            <div className="fp-achievements-stat-icon fp-achievements-stat-icon--nutrition">
+              N
+            </div>
+            <div>
+              <span className="fp-achievements-stat-label">Nutrition</span>
+              <strong className="fp-achievements-stat-value">
+                {nutritionDays}
+              </strong>
+              <span className="fp-achievements-stat-meta">days logged</span>
+            </div>
+          </div>
         </Card>
-      </div>
 
-      <Card title="Milestones">
-        <div style={{ display: "grid", gap: "var(--space-3)" }}>
-          {achievements.map((achievement) => (
-            <div
-              key={achievement.title}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "var(--space-4)",
-                border: "1px solid var(--color-border)",
-                borderRadius: "var(--r-md)",
-                opacity: achievement.unlocked ? 1 : 0.55,
-              }}
-            >
+        <Card>
+          <div className="fp-achievements-stat">
+            <div className="fp-achievements-stat-icon fp-achievements-stat-icon--progress">
+              %
+            </div>
+            <div>
+              <span className="fp-achievements-stat-label">Milestones</span>
+              <strong className="fp-achievements-stat-value">
+                {unlockedCount}/{achievements.length}
+              </strong>
+              <span className="fp-achievements-stat-meta">
+                {completionPercent}% unlocked
+              </span>
+            </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="fp-achievements-layout">
+        <Card title="Achievement Progress">
+          <div className="fp-achievements-progress">
+            <div className="fp-achievements-progress-heading">
               <div>
-                <strong>{achievement.title}</strong>
-                <p
-                  style={{
-                    marginTop: "var(--space-1)",
-                    color: "var(--color-text-muted)",
-                    fontSize: "var(--text-sm)",
-                  }}
-                >
-                  {achievement.description}
+                <strong>Overall progress</strong>
+                <p>
+                  Keep logging workouts and meals to unlock more milestones.
                 </p>
               </div>
 
-              <span>
-                {achievement.unlocked ? "Unlocked" : "Locked"}
-              </span>
+              <strong className="fp-achievements-progress-value">
+                {completionPercent}%
+              </strong>
             </div>
-          ))}
-        </div>
-      </Card>
-    </AppShell>
+
+            <div
+              className="fp-achievements-progress-track"
+              role="progressbar"
+              aria-label="Achievement completion"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={completionPercent}
+            >
+              <div
+                className="fp-achievements-progress-fill"
+                style={{ width: `${completionPercent}%` }}
+              />
+            </div>
+          </div>
+        </Card>
+
+        <Card title="Milestones">
+          <div className="fp-achievements-grid">
+            {achievements.map((achievement, index) => (
+              <article
+                key={achievement.title}
+                className={`fp-achievement-card ${
+                  achievement.unlocked
+                    ? "fp-achievement-card--unlocked"
+                    : "fp-achievement-card--locked"
+                }`}
+              >
+                <div className="fp-achievement-card-top">
+                  <div className="fp-achievement-badge">
+                    {achievement.unlocked ? "?" : index + 1}
+                  </div>
+
+                  <span
+                    className={`fp-achievement-status ${
+                      achievement.unlocked
+                        ? "fp-achievement-status--unlocked"
+                        : "fp-achievement-status--locked"
+                    }`}
+                  >
+                    {achievement.unlocked ? "Unlocked" : "Locked"}
+                  </span>
+                </div>
+
+                <div className="fp-achievement-card-copy">
+                  <strong>{achievement.title}</strong>
+                  <p>{achievement.description}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </Card>
+      </section>
+    </>
   );
 }
 

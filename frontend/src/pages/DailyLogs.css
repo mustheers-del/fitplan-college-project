@@ -1,0 +1,279 @@
+/* =========================================================
+   FITPLAN — DAILY LOGS PAGE STYLES
+   ========================================================= */
+
+.fp-logs-page {
+  width: 100%;
+  max-width: var(--content-max-width, 1400px);
+  margin: 0 auto;
+  padding: 24px 30px 48px;
+  color: var(--c-heading);
+}
+
+/* 2-Column Main Grid */
+.fp-logs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 24px;
+  align-items: start;
+}
+
+/* Card Styling */
+.fp-logs-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.fp-logs-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.fp-logs-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fp-logs-card-title h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--c-heading);
+  letter-spacing: -0.02em;
+}
+
+.fp-logs-icon-badge {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+}
+
+.fp-logs-icon-badge svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fp-logs-count-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--c-text-muted);
+  background: var(--c-surface-muted);
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--c-border-light);
+}
+
+/* Form Layout & Fields */
+.fp-logs-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.fp-logs-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fp-logs-field label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--c-heading);
+}
+
+.fp-logs-field-icon {
+  color: var(--c-primary);
+  display: inline-flex;
+}
+
+.fp-logs-field-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fp-logs-input,
+.fp-logs-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: #fbfdff;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  color: var(--c-heading);
+  font-size: 13px;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.fp-logs-input {
+  height: 44px;
+}
+
+.fp-logs-textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.fp-logs-input:focus,
+.fp-logs-textarea:focus {
+  border-color: var(--c-primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px var(--c-primary-soft);
+}
+
+/* Banner Message */
+.fp-logs-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fp-logs-banner.success {
+  background: var(--c-success-light);
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
+.fp-logs-banner.error {
+  background: var(--c-danger-light);
+  border: 1px solid #fecaca;
+  color: var(--c-danger);
+}
+
+.fp-logs-banner svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Form Actions */
+.fp-logs-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+/* History Logs List */
+.fp-logs-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 600px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.fp-logs-history-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.fp-logs-history-list::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: 999px;
+}
+
+.fp-log-item {
+  background: #fbfdff;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  transition: all var(--transition-fast);
+}
+
+.fp-log-item:hover {
+  border-color: #b3cdf8;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.fp-log-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-border-light);
+}
+
+.fp-log-item-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--c-primary-dark);
+}
+
+.fp-log-item-date svg {
+  width: 14px;
+  height: 14px;
+  color: var(--c-primary);
+}
+
+.fp-log-item-section {
+  margin-top: 8px;
+}
+
+.fp-log-item-section-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--c-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.fp-log-item-section p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--c-text);
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.fp-log-item-section p.empty {
+  color: var(--c-text-muted);
+  font-style: italic;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 900px) {
+  .fp-logs-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .fp-logs-page {
+    padding: 16px 14px 36px;
+  }
+
+  .fp-logs-card {
+    padding: 18px 16px;
+  }
+}
